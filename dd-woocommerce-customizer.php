@@ -851,12 +851,12 @@ class DD_WooCommerce_Customizer
 	 * By temporarily switching the global $product variable, we force WooCommerce to render
 	 * full, form-capable single add-to-cart templates (including complex variable dropdowns).
 	 *
-	 * @since 1.7.3
+	 * @since 1.7.0
 	 * @return void
 	 */
 	public function display_frequently_bought_together()
 	{
-		global $product, $post;
+		global $product;
 
 		if (! $product) {
 			return;
@@ -878,30 +878,19 @@ class DD_WooCommerce_Customizer
 
 		echo '<div class="dd-fbt-wrapper">';
 		echo '<h4>' . esc_html__('Frequently bought together', 'dd-woo-customizer') . '</h4>';
-		echo '<div class="dd-fbt-list">';
+		echo '<div class="dd-fbt-list">'; // Refactored from ul/li to robust divs for nested form handling
 
-		// Backup the primary product and post instances to restore post-loop
+		// Backup the primary product instance to restore post-loop
 		$original_product = $product;
-		$original_post    = $post;
 
 		foreach ($cross_sell_ids as $cross_sell_id) {
 			$cross_sell = wc_get_product($cross_sell_id);
-
-			if (! $cross_sell) {
-				continue;
-			}
-
-			// CRITICAL FIX: If a specific variation ID was attached as a cross-sell, 
-			// normalize it to the parent variable product to prevent fatal method calls.
-			if ($cross_sell->is_type('variation')) {
-				$cross_sell = wc_get_product($cross_sell->get_parent_id());
-			}
 
 			if (! $cross_sell || ! $cross_sell->is_visible()) {
 				continue;
 			}
 
-			$is_in_cart = in_array($cross_sell->get_id(), $cart_product_ids);
+			$is_in_cart = in_array($cross_sell_id, $cart_product_ids);
 			$cart_class = $is_in_cart ? ' is-in-cart' : '';
 
 			echo '<div class="dd-fbt-item' . esc_attr($cart_class) . '">';
@@ -926,12 +915,11 @@ class DD_WooCommerce_Customizer
 			echo '</div>'; // end main
 
 			echo '<div class="dd-fbt-action">';
-
-			// Temporarily mutate BOTH global contexts to trick native add-to-cart logic
+			// Temporarily mutate the global context to generate the native add-to-cart form logic
 			$GLOBALS['product'] = $cross_sell;
-			$GLOBALS['post']    = get_post($cross_sell->get_id());
-			setup_postdata($GLOBALS['post']);
+			setup_postdata($cross_sell->get_id());
 
+			// This generates the robust form mapping (e.g., Simple products get a standard form, Variables get dynamic dropdowns).
 			woocommerce_template_single_add_to_cart();
 
 			echo '</div>'; // end action
@@ -941,13 +929,7 @@ class DD_WooCommerce_Customizer
 
 		// Strictly restore global execution environment
 		$GLOBALS['product'] = $original_product;
-		$GLOBALS['post']    = $original_post;
-
-		if ($original_post) {
-			setup_postdata($original_post);
-		} else {
-			wp_reset_postdata();
-		}
+		wp_reset_postdata();
 
 		echo '</div>';
 		echo '</div>';

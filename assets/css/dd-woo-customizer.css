@@ -232,3 +232,7 @@ ul.products .woocommerce-text-align-center {
 .woocommerce a.added_to_cart {
 	display: none;
 }
+
+.dd-fbt-action form.cart {
+	align-items: unset;
+}

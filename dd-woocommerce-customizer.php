@@ -3,8 +3,8 @@
 /**
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
- * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, and reordered upsells.
- * Version:     1.8.3
+ * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, reordered upsells, and a segregated top product section.
+ * Version:     1.8.4
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -36,6 +36,10 @@ class DD_WooCommerce_Customizer
 
 		// Inject a custom wrapper close tag after the main shop loop.
 		add_action('woocommerce_after_main_content', [$this, 'add_custom_wrapper_close'], 50);
+
+		// Layout: Wrap the single product gallery and summary in a bespoke container.
+		add_action('woocommerce_before_single_product_summary', [$this, 'open_product_top_section_wrapper'], 5);
+		add_action('woocommerce_after_single_product_summary', [$this, 'close_product_top_section_wrapper'], 5);
 
 		// Override default variation dropdown HTML for targeted non-global attributes.
 		add_filter('woocommerce_dropdown_variation_attribute_options_html', [$this, 'render_custom_variation_cards'], 10, 2);
@@ -146,11 +150,14 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.8.3',
+				'1.8.4',
 				'all'
 			);
 
 			$custom_css = "
+				.dd-single-product-top-section { display: flex; flex-wrap: wrap; gap: 4%; width: 100%; margin-bottom: 3em; }
+				.dd-single-product-top-section::after { content: ''; display: table; clear: both; }
+				@media (max-width: 768px) { .dd-single-product-top-section { flex-direction: column; } }
 				.dd-downloads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
 				.dd-download-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: flex-start; background: #f8fafc; transition: all 0.2s ease-in-out; }
 				.dd-download-card:hover { border-color: #cbd5e1; background: #f1f5f9; }
@@ -205,6 +212,30 @@ class DD_WooCommerce_Customizer
 	public function add_custom_wrapper_close()
 	{
 		echo '</div>';
+	}
+
+	/**
+	 * Injects an opening HTML section tag before the single product gallery and summary.
+	 * This establishes a unified container for the top-half structure.
+	 *
+	 * @since 1.8.4
+	 * @return void
+	 */
+	public function open_product_top_section_wrapper()
+	{
+		echo '<section class="dd-single-product-top-section">';
+	}
+
+	/**
+	 * Injects a closing HTML section tag immediately after the single product summary.
+	 * Seals the distinct section encapsulating both the media gallery and product data.
+	 *
+	 * @since 1.8.4
+	 * @return void
+	 */
+	public function close_product_top_section_wrapper()
+	{
+		echo '</section>';
 	}
 
 	/**

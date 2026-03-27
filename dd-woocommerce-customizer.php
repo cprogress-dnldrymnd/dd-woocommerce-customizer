@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, and reordered upsells.
- * Version:     1.8.1
+ * Version:     1.7.8
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -78,22 +78,21 @@ class DD_WooCommerce_Customizer
 		// Layout: Display "Frequently bought together" safely BELOW the main add-to-cart form 
 		add_action('woocommerce_after_add_to_cart_form', [$this, 'display_frequently_bought_together'], 10);
 
-		// JavaScript: Inject bespoke AJAX handler globally for all product forms
-		add_action('wp_footer', [$this, 'inject_ajax_add_to_cart_scripts']);
+		// JavaScript: Inject bespoke AJAX handler for the nested FBT add-to-cart forms
+		add_action('wp_footer', [$this, 'inject_fbt_ajax_scripts']);
 
 		// AJAX Endpoints: Handle Custom Add to Cart for both Simple and Variable Products
-		add_action('wp_ajax_dd_ajax_add_to_cart', [$this, 'handle_ajax_add_to_cart']);
-		add_action('wp_ajax_nopriv_dd_ajax_add_to_cart', [$this, 'handle_ajax_add_to_cart']);
+		add_action('wp_ajax_dd_fbt_add_to_cart', [$this, 'handle_fbt_ajax_add_to_cart']);
+		add_action('wp_ajax_nopriv_dd_fbt_add_to_cart', [$this, 'handle_fbt_ajax_add_to_cart']);
 	}
 
 	/**
-	 * Custom AJAX endpoint to process cart additions for complex variable products.
-	 * Handled globally for the main product form and the FBT items.
+	 * Custom AJAX endpoint to process cart additions for complex FBT variable products.
 	 *
-	 * @since 1.8.1
+	 * @since 1.7.5
 	 * @return void
 	 */
-	public function handle_ajax_add_to_cart()
+	public function handle_fbt_ajax_add_to_cart()
 	{
 		ob_start();
 
@@ -145,7 +144,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.8.1',
+				'1.7.8',
 				'all'
 			);
 
@@ -798,7 +797,7 @@ class DD_WooCommerce_Customizer
 	/**
 	 * Display "Frequently Bought Together" natively configured with dynamic add-to-cart injection.
 	 *
-	 * @since 1.8.1
+	 * @since 1.7.8
 	 * @return void
 	 */
 	public function display_frequently_bought_together()
@@ -951,13 +950,12 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Injects specialized JavaScript handling to convert native WooCommerce variable/simple 
-	 * form POST submissions (both FBT modules and the primary global product form) into seamless 
-	 * AJAX events via a custom endpoint.
+	 * form POST submissions inside the FBT module into seamless AJAX events via a custom endpoint.
 	 *
-	 * @since 1.8.1
+	 * @since 1.7.5
 	 * @return void
 	 */
-	public function inject_ajax_add_to_cart_scripts()
+	public function inject_fbt_ajax_scripts()
 	{
 		if (! is_product()) {
 			return;
@@ -973,19 +971,16 @@ class DD_WooCommerce_Customizer
 					});
 				}
 
-				// Intercept ALL cart form submissions on the product page (Main product & FBT items)
-				$(document).on('submit', 'form.cart', function(e) {
+				// Intercept standard form submissions within the FBT wrappers
+				$(document).on('submit', '.dd-fbt-item form.cart', function(e) {
 					e.preventDefault();
 
 					// CRITICAL: Prevent theme scripts (like Elementor/GeneratePress) from double-firing on this form
 					e.stopImmediatePropagation();
 
 					var $form = $(this);
+					var $item = $form.closest('.dd-fbt-item');
 					var $btn = $form.find('button[type="submit"]');
-
-					// Determine context: Is this an FBT module or the main product form?
-					var $fbtItem = $form.closest('.dd-fbt-item');
-					var isFbt    = $fbtItem.length > 0;
 
 					// Respect WooCommerce's native disabled state (e.g., missing variation selection)
 					if ($btn.is('.disabled')) {
@@ -998,8 +993,8 @@ class DD_WooCommerce_Customizer
 					// Utilize FormData to safely parse all inputs, including dynamically generated attribute variations
 					var formData = new FormData($form[0]);
 
-					// Route to the global custom AJAX endpoint
-					formData.append('action', 'dd_ajax_add_to_cart');
+					// Route to the custom AJAX endpoint
+					formData.append('action', 'dd_fbt_add_to_cart');
 
 					// Ensure the core product ID is passed (especially crucial for simple products lacking variation IDs)
 					var productId = $btn.val() || $form.find('input[name="add-to-cart"]').val();
@@ -1024,20 +1019,10 @@ class DD_WooCommerce_Customizer
 
 								// Safely remove the loading states
 								$btn.removeClass('loading wc-loading');
-								
-								// Apply contextual UX feedback based on form location
-								if (isFbt) {
-									$fbtItem.addClass('is-in-cart');
-									if ($fbtItem.find('.dd-fbt-badge').length === 0) {
-										$fbtItem.prepend('<span class="dd-fbt-badge">Added to cart</span>');
-									}
-								} else {
-									// For the main product, provide a clear visual UX cue that the item was added
-									var originalText = $btn.html();
-									$btn.html('Added to cart!');
-									setTimeout(function() {
-										$btn.html(originalText);
-									}, 3000);
+								$item.addClass('is-in-cart');
+
+								if ($item.find('.dd-fbt-badge').length === 0) {
+									$item.prepend('<span class="dd-fbt-badge">Added to cart</span>');
 								}
 
 							} else if (response && response.success === false) {

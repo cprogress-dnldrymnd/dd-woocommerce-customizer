@@ -176,12 +176,12 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-title:hover { color: #ff0000; }
 				.dd-fbt-price { font-size: 0.95rem; font-weight: 700; color: #ff0000; text-align: right; }
 
-				.dd-fbt-wrapper div.product.do-quantity-buttons form.cart {
+				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper form.cart {
 				    margin: 0 !important;
     				padding: 0 !important;
 				}
 
-				.dd-fbt-wrapper div.product form.cart .variations tr {
+				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper .variations tr {
 					flex-direction: row;
 				}
 				

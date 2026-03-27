@@ -391,14 +391,59 @@ class DD_WooCommerce_Customizer
 		}
 	?>
 		<style>
-			.dd-custom-variations-grid { display: flex; flex-direction: column; gap: 12px; }
-			.dd-variation-card { display: flex; align-items: center; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; cursor: pointer; transition: all 0.2s ease-in-out; }
-			.dd-variation-card:not(.disabled):not(.selected):hover { border-color: #cbd5e1; background: #f1f5f9; }
-			.dd-variation-card.selected { border-color: #ef4444; background: #ffffff; }
-			.dd-variation-card.disabled { opacity: 0.4; cursor: not-allowed; background: #e2e8f0; border-color: #cbd5e1; filter: grayscale(100%); }
-			.dd-variation-card-img { width: 60px; height: 60px; margin-right: 16px; flex-shrink: 0; }
-			.dd-variation-card-img img { width: 100%; height: 100%; object-fit: contain; }
-			.dd-variation-card-title { font-size: 15px; font-weight: 500; color: #1e293b; }
+			.dd-custom-variations-grid {
+				display: flex;
+				flex-direction: column;
+				gap: 12px;
+			}
+
+			.dd-variation-card {
+				display: flex;
+				align-items: center;
+				padding: 12px 16px;
+				border: 1px solid #e2e8f0;
+				border-radius: 8px;
+				background: #f8fafc;
+				cursor: pointer;
+				transition: all 0.2s ease-in-out;
+			}
+
+			.dd-variation-card:not(.disabled):not(.selected):hover {
+				border-color: #cbd5e1;
+				background: #f1f5f9;
+			}
+
+			.dd-variation-card.selected {
+				border-color: #ef4444;
+				background: #ffffff;
+			}
+
+			.dd-variation-card.disabled {
+				opacity: 0.4;
+				cursor: not-allowed;
+				background: #e2e8f0;
+				border-color: #cbd5e1;
+				filter: grayscale(100%);
+			}
+
+			.dd-variation-card-img {
+				width: 60px;
+				height: 60px;
+				margin-right: 16px;
+				flex-shrink: 0;
+			}
+
+			.dd-variation-card-img img {
+				width: 100%;
+				height: 100%;
+				object-fit: contain;
+			}
+
+			.dd-variation-card-title {
+				font-size: 15px;
+				font-weight: 500;
+				color: #1e293b;
+			}
 		</style>
 
 		<script type="text/javascript">
@@ -500,18 +545,57 @@ class DD_WooCommerce_Customizer
 		echo '<div id="dd_downloads_product_data" class="panel woocommerce_options_panel hidden">';
 		echo '<div class="options_group" style="padding: 10px 20px;">';
 		$downloads_data = get_post_meta($post->ID, '_dd_product_downloads', true);
-		if (! is_array($downloads_data)) { $downloads_data = []; }
+		if (! is_array($downloads_data)) {
+			$downloads_data = [];
+		}
 	?>
 		<div class="dd-repeater-wrapper">
 			<style>
-				.dd-repeater-row { border: 1px solid #dfdfdf; background: #f9f9f9; margin-bottom: 10px; border-radius: 3px; }
-				.dd-repeater-header { padding: 10px; background: #eee; cursor: move; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dfdfdf; }
-				.dd-repeater-header h4 { margin: 0; font-size: 13px; }
-				.dd-repeater-actions { display: flex; gap: 8px; }
-				.dd-repeater-actions a { text-decoration: none; cursor: pointer; color: #555; }
-				.dd-repeater-actions a:hover { color: #0073aa; }
-				.dd-repeater-content { padding: 15px; background: #fff; }
-				.dd-repeater-row.collapsed .dd-repeater-content { display: none; }
+				.dd-repeater-row {
+					border: 1px solid #dfdfdf;
+					background: #f9f9f9;
+					margin-bottom: 10px;
+					border-radius: 3px;
+				}
+
+				.dd-repeater-header {
+					padding: 10px;
+					background: #eee;
+					cursor: move;
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+					border-bottom: 1px solid #dfdfdf;
+				}
+
+				.dd-repeater-header h4 {
+					margin: 0;
+					font-size: 13px;
+				}
+
+				.dd-repeater-actions {
+					display: flex;
+					gap: 8px;
+				}
+
+				.dd-repeater-actions a {
+					text-decoration: none;
+					cursor: pointer;
+					color: #555;
+				}
+
+				.dd-repeater-actions a:hover {
+					color: #0073aa;
+				}
+
+				.dd-repeater-content {
+					padding: 15px;
+					background: #fff;
+				}
+
+				.dd-repeater-row.collapsed .dd-repeater-content {
+					display: none;
+				}
 			</style>
 			<div id="dd-downloads-container">
 				<?php
@@ -557,7 +641,7 @@ class DD_WooCommerce_Customizer
 				</p>
 			</div>
 		</div>
-<?php
+	<?php
 	}
 
 	/**
@@ -567,7 +651,9 @@ class DD_WooCommerce_Customizer
 	 */
 	public function enqueue_admin_scripts($hook)
 	{
-		if (! in_array($hook, ['post.php', 'post-new.php'], true)) { return; }
+		if (! in_array($hook, ['post.php', 'post-new.php'], true)) {
+			return;
+		}
 		wp_enqueue_media();
 		wp_enqueue_script('jquery-ui-sortable');
 		ob_start();
@@ -733,7 +819,9 @@ class DD_WooCommerce_Customizer
 	 */
 	public function remove_reviews_tab($tabs)
 	{
-		if (isset($tabs['reviews'])) { unset($tabs['reviews']); }
+		if (isset($tabs['reviews'])) {
+			unset($tabs['reviews']);
+		}
 		return $tabs;
 	}
 
@@ -812,7 +900,7 @@ class DD_WooCommerce_Customizer
 			}
 
 			echo '<div class="dd-fbt-main">';
-			
+
 			echo '<a href="' . esc_url($cross_sell->get_permalink()) . '">';
 			echo wp_kses_post($cross_sell->get_image('woocommerce_gallery_thumbnail'));
 			echo '</a>';
@@ -830,10 +918,10 @@ class DD_WooCommerce_Customizer
 			// Temporarily mutate the global context to generate the native add-to-cart form logic
 			$GLOBALS['product'] = $cross_sell;
 			setup_postdata($cross_sell->get_id());
-			
+
 			// This generates the robust form mapping (e.g., Simple products get a standard form, Variables get dynamic dropdowns).
 			woocommerce_template_single_add_to_cart();
-			
+
 			echo '</div>'; // end action
 
 			echo '</div>'; // end item
@@ -863,7 +951,7 @@ class DD_WooCommerce_Customizer
 	?>
 		<script type="text/javascript">
 			jQuery(document).ready(function($) {
-				
+
 				// Re-initialize WooCommerce variation scripts for dynamically injected FBT forms
 				if ($.fn.wc_variation_form) {
 					$('.dd-fbt-item .variations_form').each(function() {
@@ -874,10 +962,10 @@ class DD_WooCommerce_Customizer
 				// Intercept standard form submissions within the FBT wrappers
 				$(document).on('submit', '.dd-fbt-item form.cart', function(e) {
 					e.preventDefault();
-					
+
 					var $form = $(this);
 					var $item = $form.closest('.dd-fbt-item');
-					var $btn  = $form.find('button[type="submit"]');
+					var $btn = $form.find('button[type="submit"]');
 
 					// Respect WooCommerce's native disabled state (e.g., missing variation selection)
 					if ($btn.is('.disabled')) {
@@ -885,10 +973,10 @@ class DD_WooCommerce_Customizer
 					}
 
 					$btn.addClass('loading');
-					
+
 					// Utilize FormData to safely parse all inputs, including dynamically generated attribute variations
 					var formData = new FormData($form[0]);
-					
+
 					// Route to the custom AJAX endpoint
 					formData.append('action', 'dd_fbt_add_to_cart');
 
@@ -910,15 +998,14 @@ class DD_WooCommerce_Customizer
 							if (response.success) {
 								// Trigger native WooCommerce fragment refresh to update headers/minicarts
 								$(document.body).trigger('added_to_cart', [response.fragments, response.cart_hash, $btn]);
-								
+
 								$btn.removeClass('loading');
 								$item.addClass('is-in-cart');
-								
+
 								if ($item.find('.dd-fbt-badge').length === 0) {
 									$item.prepend('<span class="dd-fbt-badge">Added to cart</span>');
 								}
 							} else {
-								$btn.removeClass('loading');
 								alert(response.data.message || 'Failed to add item to cart.');
 							}
 						},
@@ -930,7 +1017,7 @@ class DD_WooCommerce_Customizer
 				});
 			});
 		</script>
-	<?php
+<?php
 	}
 }
 

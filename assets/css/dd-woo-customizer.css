@@ -271,15 +271,25 @@ ul.products .woocommerce-text-align-center {
 		--padding-x: 1.875rem;
 	}
 	.woocommerce div.product .product_title {
+		font-size: 1.75rem;
+	}
+	.related.products h2,
+	.upsells.products h2 {
 		font-size: 1.5rem;
 	}
 }
-
 
 @media (max-width: 767px) {
 	.single-product {
 		background-color: #ebebeb;
 		overflow-x: hidden;
 		--padding-x: 1.25rem;
+	}
+	.woocommerce div.product .product_title {
+		font-size: 1.5rem;
+	}
+	.related.products h2,
+	.upsells.products h2 {
+		font-size: 1.15rem;
 	}
 }

@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, and reordered upsells.
- * Version:     1.7.6
+ * Version:     1.7.7
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -148,7 +148,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.7.6',
+				'1.7.7',
 				'all'
 			);
 
@@ -849,11 +849,10 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Display "Frequently Bought Together" natively configured with dynamic add-to-cart injection.
-	 * By temporarily switching the global $product variable, we force WooCommerce to render
-	 * full, form-capable single add-to-cart templates (including complex variable dropdowns).
-	 * Utilizes a static recursion lock to prevent infinite loops when rendering nested forms.
+	 * Manages bespoke logic for explicitly selecting 'variation' cross-sells, converting them to
+	 * simple-click additions by injecting hidden attribute payloads to bypass core validation screens.
 	 *
-	 * @since 1.7.4
+	 * @since 1.7.7
 	 * @return void
 	 */
 	public function display_frequently_bought_together()
@@ -885,6 +884,9 @@ class DD_WooCommerce_Customizer
 		if (is_object(WC()->cart)) {
 			foreach (WC()->cart->get_cart() as $cart_item) {
 				$cart_product_ids[] = $cart_item['product_id'];
+				if (!empty($cart_item['variation_id'])) {
+					$cart_product_ids[] = $cart_item['variation_id']; // Also track explicit variations
+				}
 			}
 		}
 
@@ -903,13 +905,8 @@ class DD_WooCommerce_Customizer
 				continue;
 			}
 
-			// Normalize specific variation IDs to their parent variable product to prevent 
-			// fatal method calls within the core add-to-cart templating engine.
-			if ($cross_sell->is_type('variation')) {
-				$cross_sell = wc_get_product($cross_sell->get_parent_id());
-			}
-
-			if (! $cross_sell || ! $cross_sell->is_visible()) {
+			// For simple/variable products, check visibility. Variations don't have standard catalog visibility.
+			if (! $cross_sell->is_type('variation') && ! $cross_sell->is_visible()) {
 				continue;
 			}
 
@@ -939,12 +936,44 @@ class DD_WooCommerce_Customizer
 
 			echo '<div class="dd-fbt-action">';
 
-			// Temporarily mutate BOTH global contexts to trick native add-to-cart logic
-			$GLOBALS['product'] = $cross_sell;
-			$GLOBALS['post']    = get_post($cross_sell->get_id());
-			setup_postdata($GLOBALS['post']);
+			if ($cross_sell->is_type('variation')) {
 
-			woocommerce_template_single_add_to_cart();
+				// Render a bespoke direct-add form for explicit variation instances to prevent rendering parent dropdowns.
+				// By constructing this manually, we inject the specific variation attributes as hidden data, 
+				// satisfying WooCommerce validation without requiring user interaction.
+				echo '<form class="cart dd-direct-variation-form" method="post" enctype="multipart/form-data">';
+
+				woocommerce_quantity_input([
+					'min_value'   => apply_filters('woocommerce_quantity_input_min', $cross_sell->get_min_purchase_quantity(), $cross_sell),
+					'max_value'   => apply_filters('woocommerce_quantity_input_max', $cross_sell->get_max_purchase_quantity(), $cross_sell),
+					'input_value' => isset($_POST['quantity']) ? wc_stock_amount(wp_unslash($_POST['quantity'])) : $cross_sell->get_min_purchase_quantity(),
+				], $cross_sell);
+
+				echo '<button type="submit" class="single_add_to_cart_button button alt">' . esc_html($cross_sell->single_add_to_cart_text()) . '</button>';
+
+				// Hidden parameters to force single-click routing in the AJAX handler
+				echo '<input type="hidden" name="add-to-cart" value="' . absint($cross_sell->get_parent_id()) . '" />';
+				echo '<input type="hidden" name="product_id" value="' . absint($cross_sell->get_parent_id()) . '" />';
+				echo '<input type="hidden" name="variation_id" class="variation_id" value="' . absint($cross_sell->get_id()) . '" />';
+
+				// Dynamically map and inject all parent attribute assignments for this explicit variation
+				foreach ($cross_sell->get_attributes() as $attribute_name => $attribute_value) {
+					// Ensure standard WooCommerce 'attribute_' prefix for POST serialization
+					$input_name = (strpos($attribute_name, 'attribute_') === 0) ? $attribute_name : 'attribute_' . sanitize_title($attribute_name);
+					echo '<input type="hidden" name="' . esc_attr($input_name) . '" value="' . esc_attr($attribute_value) . '" />';
+				}
+
+				echo '</form>';
+			} else {
+
+				// For generic Simple or full Variable parent products, utilize core rendering logic
+				// Temporarily mutate BOTH global contexts to trick native add-to-cart mapping
+				$GLOBALS['product'] = $cross_sell;
+				$GLOBALS['post']    = get_post($cross_sell->get_id());
+				setup_postdata($GLOBALS['post']);
+
+				woocommerce_template_single_add_to_cart();
+			}
 
 			echo '</div>'; // end action
 

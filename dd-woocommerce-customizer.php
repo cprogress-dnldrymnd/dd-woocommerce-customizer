@@ -390,59 +390,14 @@ class DD_WooCommerce_Customizer
 		}
 	?>
 		<style>
-			.dd-custom-variations-grid {
-				display: flex;
-				flex-direction: column;
-				gap: 12px;
-			}
-
-			.dd-variation-card {
-				display: flex;
-				align-items: center;
-				padding: 12px 16px;
-				border: 1px solid #e2e8f0;
-				border-radius: 8px;
-				background: #f8fafc;
-				cursor: pointer;
-				transition: all 0.2s ease-in-out;
-			}
-
-			.dd-variation-card:not(.disabled):not(.selected):hover {
-				border-color: #cbd5e1;
-				background: #f1f5f9;
-			}
-
-			.dd-variation-card.selected {
-				border-color: #ef4444;
-				background: #ffffff;
-			}
-
-			.dd-variation-card.disabled {
-				opacity: 0.4;
-				cursor: not-allowed;
-				background: #e2e8f0;
-				border-color: #cbd5e1;
-				filter: grayscale(100%);
-			}
-
-			.dd-variation-card-img {
-				width: 60px;
-				height: 60px;
-				margin-right: 16px;
-				flex-shrink: 0;
-			}
-
-			.dd-variation-card-img img {
-				width: 100%;
-				height: 100%;
-				object-fit: contain;
-			}
-
-			.dd-variation-card-title {
-				font-size: 15px;
-				font-weight: 500;
-				color: #1e293b;
-			}
+			.dd-custom-variations-grid { display: flex; flex-direction: column; gap: 12px; }
+			.dd-variation-card { display: flex; align-items: center; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; cursor: pointer; transition: all 0.2s ease-in-out; }
+			.dd-variation-card:not(.disabled):not(.selected):hover { border-color: #cbd5e1; background: #f1f5f9; }
+			.dd-variation-card.selected { border-color: #ef4444; background: #ffffff; }
+			.dd-variation-card.disabled { opacity: 0.4; cursor: not-allowed; background: #e2e8f0; border-color: #cbd5e1; filter: grayscale(100%); }
+			.dd-variation-card-img { width: 60px; height: 60px; margin-right: 16px; flex-shrink: 0; }
+			.dd-variation-card-img img { width: 100%; height: 100%; object-fit: contain; }
+			.dd-variation-card-title { font-size: 15px; font-weight: 500; color: #1e293b; }
 		</style>
 
 		<script type="text/javascript">
@@ -544,57 +499,18 @@ class DD_WooCommerce_Customizer
 		echo '<div id="dd_downloads_product_data" class="panel woocommerce_options_panel hidden">';
 		echo '<div class="options_group" style="padding: 10px 20px;">';
 		$downloads_data = get_post_meta($post->ID, '_dd_product_downloads', true);
-		if (! is_array($downloads_data)) {
-			$downloads_data = [];
-		}
+		if (! is_array($downloads_data)) { $downloads_data = []; }
 	?>
 		<div class="dd-repeater-wrapper">
 			<style>
-				.dd-repeater-row {
-					border: 1px solid #dfdfdf;
-					background: #f9f9f9;
-					margin-bottom: 10px;
-					border-radius: 3px;
-				}
-
-				.dd-repeater-header {
-					padding: 10px;
-					background: #eee;
-					cursor: move;
-					display: flex;
-					justify-content: space-between;
-					align-items: center;
-					border-bottom: 1px solid #dfdfdf;
-				}
-
-				.dd-repeater-header h4 {
-					margin: 0;
-					font-size: 13px;
-				}
-
-				.dd-repeater-actions {
-					display: flex;
-					gap: 8px;
-				}
-
-				.dd-repeater-actions a {
-					text-decoration: none;
-					cursor: pointer;
-					color: #555;
-				}
-
-				.dd-repeater-actions a:hover {
-					color: #0073aa;
-				}
-
-				.dd-repeater-content {
-					padding: 15px;
-					background: #fff;
-				}
-
-				.dd-repeater-row.collapsed .dd-repeater-content {
-					display: none;
-				}
+				.dd-repeater-row { border: 1px solid #dfdfdf; background: #f9f9f9; margin-bottom: 10px; border-radius: 3px; }
+				.dd-repeater-header { padding: 10px; background: #eee; cursor: move; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dfdfdf; }
+				.dd-repeater-header h4 { margin: 0; font-size: 13px; }
+				.dd-repeater-actions { display: flex; gap: 8px; }
+				.dd-repeater-actions a { text-decoration: none; cursor: pointer; color: #555; }
+				.dd-repeater-actions a:hover { color: #0073aa; }
+				.dd-repeater-content { padding: 15px; background: #fff; }
+				.dd-repeater-row.collapsed .dd-repeater-content { display: none; }
 			</style>
 			<div id="dd-downloads-container">
 				<?php
@@ -640,7 +556,7 @@ class DD_WooCommerce_Customizer
 				</p>
 			</div>
 		</div>
-	<?php
+<?php
 	}
 
 	/**
@@ -650,9 +566,7 @@ class DD_WooCommerce_Customizer
 	 */
 	public function enqueue_admin_scripts($hook)
 	{
-		if (! in_array($hook, ['post.php', 'post-new.php'], true)) {
-			return;
-		}
+		if (! in_array($hook, ['post.php', 'post-new.php'], true)) { return; }
 		wp_enqueue_media();
 		wp_enqueue_script('jquery-ui-sortable');
 		ob_start();
@@ -818,9 +732,7 @@ class DD_WooCommerce_Customizer
 	 */
 	public function remove_reviews_tab($tabs)
 	{
-		if (isset($tabs['reviews'])) {
-			unset($tabs['reviews']);
-		}
+		if (isset($tabs['reviews'])) { unset($tabs['reviews']); }
 		return $tabs;
 	}
 
@@ -890,7 +802,7 @@ class DD_WooCommerce_Customizer
 
 		echo '<div class="dd-fbt-wrapper">';
 		echo '<h4>' . esc_html__('Frequently bought together', 'dd-woo-customizer') . '</h4>';
-		echo '<div class="dd-fbt-list">';
+		echo '<div class="dd-fbt-list">'; 
 
 		// Backup the primary product and post instances to restore post-loop
 		$original_product = $product;
@@ -904,7 +816,7 @@ class DD_WooCommerce_Customizer
 			}
 
 			// For simple/variable products, check visibility. Variations don't have standard catalog visibility.
-			if (! $cross_sell->is_type('variation') && ! $cross_sell->is_visible()) {
+			if ( ! $cross_sell->is_type('variation') && ! $cross_sell->is_visible() ) {
 				continue;
 			}
 
@@ -918,7 +830,7 @@ class DD_WooCommerce_Customizer
 			}
 
 			echo '<div class="dd-fbt-main">';
-
+			
 			echo '<a href="' . esc_url($cross_sell->get_permalink()) . '">';
 			echo wp_kses_post($cross_sell->get_image('woocommerce_gallery_thumbnail'));
 			echo '</a>';
@@ -933,46 +845,47 @@ class DD_WooCommerce_Customizer
 			echo '</div>'; // end main
 
 			echo '<div class="dd-fbt-action">';
-
-			if ($cross_sell->is_type('variation')) {
-
+			
+			if ( $cross_sell->is_type('variation') ) {
+				
 				// Render a bespoke direct-add form for explicit variation instances to prevent rendering parent dropdowns.
 				// By constructing this manually, we inject the specific variation attributes as hidden data, 
 				// satisfying WooCommerce validation without requiring user interaction.
 				echo '<form class="cart dd-direct-variation-form" method="post" enctype="multipart/form-data">';
+				
+				woocommerce_quantity_input( [
+					'min_value'   => apply_filters( 'woocommerce_quantity_input_min', $cross_sell->get_min_purchase_quantity(), $cross_sell ),
+					'max_value'   => apply_filters( 'woocommerce_quantity_input_max', $cross_sell->get_max_purchase_quantity(), $cross_sell ),
+					'input_value' => isset( $_POST['quantity'] ) ? wc_stock_amount( wp_unslash( $_POST['quantity'] ) ) : $cross_sell->get_min_purchase_quantity(),
+				], $cross_sell );
 
-				woocommerce_quantity_input([
-					'min_value'   => apply_filters('woocommerce_quantity_input_min', $cross_sell->get_min_purchase_quantity(), $cross_sell),
-					'max_value'   => apply_filters('woocommerce_quantity_input_max', $cross_sell->get_max_purchase_quantity(), $cross_sell),
-					'input_value' => isset($_POST['quantity']) ? wc_stock_amount(wp_unslash($_POST['quantity'])) : $cross_sell->get_min_purchase_quantity(),
-				], $cross_sell);
-
-				echo '<button type="submit" class="single_add_to_cart_button button alt">' . esc_html($cross_sell->single_add_to_cart_text()) . '</button>';
+				echo '<button type="submit" class="single_add_to_cart_button button alt">' . esc_html( $cross_sell->single_add_to_cart_text() ) . '</button>';
 
 				// Hidden parameters to force single-click routing in the AJAX handler
-				echo '<input type="hidden" name="add-to-cart" value="' . absint($cross_sell->get_parent_id()) . '" />';
-				echo '<input type="hidden" name="product_id" value="' . absint($cross_sell->get_parent_id()) . '" />';
-				echo '<input type="hidden" name="variation_id" class="variation_id" value="' . absint($cross_sell->get_id()) . '" />';
+				echo '<input type="hidden" name="add-to-cart" value="' . absint( $cross_sell->get_parent_id() ) . '" />';
+				echo '<input type="hidden" name="product_id" value="' . absint( $cross_sell->get_parent_id() ) . '" />';
+				echo '<input type="hidden" name="variation_id" class="variation_id" value="' . absint( $cross_sell->get_id() ) . '" />';
 
 				// Dynamically map and inject all parent attribute assignments for this explicit variation
-				foreach ($cross_sell->get_attributes() as $attribute_name => $attribute_value) {
+				foreach ( $cross_sell->get_attributes() as $attribute_name => $attribute_value ) {
 					// Ensure standard WooCommerce 'attribute_' prefix for POST serialization
-					$input_name = (strpos($attribute_name, 'attribute_') === 0) ? $attribute_name : 'attribute_' . sanitize_title($attribute_name);
-					echo '<input type="hidden" name="' . esc_attr($input_name) . '" value="' . esc_attr($attribute_value) . '" />';
+					$input_name = ( strpos( $attribute_name, 'attribute_' ) === 0 ) ? $attribute_name : 'attribute_' . sanitize_title( $attribute_name );
+					echo '<input type="hidden" name="' . esc_attr( $input_name ) . '" value="' . esc_attr( $attribute_value ) . '" />';
 				}
 
 				echo '</form>';
-			} else {
 
+			} else {
+				
 				// For generic Simple or full Variable parent products, utilize core rendering logic
 				// Temporarily mutate BOTH global contexts to trick native add-to-cart mapping
 				$GLOBALS['product'] = $cross_sell;
 				$GLOBALS['post']    = get_post($cross_sell->get_id());
 				setup_postdata($GLOBALS['post']);
-
+				
 				woocommerce_template_single_add_to_cart();
 			}
-
+			
 			echo '</div>'; // end action
 
 			echo '</div>'; // end item
@@ -981,7 +894,7 @@ class DD_WooCommerce_Customizer
 		// Strictly restore global execution environment
 		$GLOBALS['product'] = $original_product;
 		$GLOBALS['post']    = $original_post;
-
+		
 		if ($original_post) {
 			setup_postdata($original_post);
 		} else {
@@ -1011,7 +924,7 @@ class DD_WooCommerce_Customizer
 	?>
 		<script type="text/javascript">
 			jQuery(document).ready(function($) {
-
+				
 				// Re-initialize WooCommerce variation scripts for dynamically injected FBT forms
 				if ($.fn.wc_variation_form) {
 					$('.dd-fbt-item .variations_form').each(function() {
@@ -1022,16 +935,16 @@ class DD_WooCommerce_Customizer
 				// Intercept ALL cart form submissions on the product page (Main product & FBT items)
 				$(document).on('submit', 'form.cart', function(e) {
 					e.preventDefault();
-
+					
 					// CRITICAL: Prevent theme scripts (like Elementor/GeneratePress) from double-firing on this form
-					e.stopImmediatePropagation();
-
+					e.stopImmediatePropagation(); 
+					
 					var $form = $(this);
-					var $btn = $form.find('button[type="submit"]');
-
+					var $btn  = $form.find('button[type="submit"]');
+					
 					// Determine context: Is this an FBT module or the main product form?
 					var $fbtItem = $form.closest('.dd-fbt-item');
-					var isFbt = $fbtItem.length > 0;
+					var isFbt    = $fbtItem.length > 0;
 
 					// Respect WooCommerce's native disabled state (e.g., missing variation selection)
 					if ($btn.is('.disabled')) {
@@ -1040,10 +953,10 @@ class DD_WooCommerce_Customizer
 
 					// Add our custom loading class + WooCommerce's native loading class
 					$btn.addClass('loading wc-loading');
-
+					
 					// Utilize FormData to safely parse all inputs, including dynamically generated attribute variations
 					var formData = new FormData($form[0]);
-
+					
 					// Route to the global custom AJAX endpoint
 					formData.append('action', 'dd_ajax_add_to_cart');
 
@@ -1064,13 +977,13 @@ class DD_WooCommerce_Customizer
 						success: function(response) {
 							// Check if raw fragment JSON object is returned
 							if (response && response.fragments) {
-
+								
 								// Trigger native WooCommerce fragment refresh to update headers/minicarts
 								$(document.body).trigger('added_to_cart', [response.fragments, response.cart_hash, $btn]);
-
+								
 								// Safely remove the loading states
 								$btn.removeClass('loading wc-loading');
-
+								
 								// Apply contextual UX feedback based on form location
 								if (isFbt) {
 									$fbtItem.addClass('is-in-cart');
@@ -1085,12 +998,12 @@ class DD_WooCommerce_Customizer
 										$btn.html(originalText);
 									}, 3000);
 								}
-
+								
 							} else if (response && response.success === false) {
-
+								
 								$btn.removeClass('loading wc-loading');
 								alert((response.data && response.data.message) ? response.data.message : 'Failed to add item to cart.');
-
+								
 							} else {
 								$btn.removeClass('loading wc-loading');
 							}
@@ -1103,7 +1016,7 @@ class DD_WooCommerce_Customizer
 				});
 			});
 		</script>
-<?php
+	<?php
 	}
 }
 

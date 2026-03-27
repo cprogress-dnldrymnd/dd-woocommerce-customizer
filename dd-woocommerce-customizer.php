@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, and reordered upsells.
- * Version:     1.7.1
+ * Version:     1.7.2
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -75,8 +75,9 @@ class DD_WooCommerce_Customizer
 		// Layout: Position "You May Also Like" (Upsells) below Related Products
 		add_action('init', [$this, 'reorder_upsells_and_related_products']);
 
-		// Layout: Display "Frequently bought together" directly above the add to cart/quantity inputs
-		add_action('woocommerce_before_add_to_cart_button', [$this, 'display_frequently_bought_together'], 10);
+		// Layout: Display "Frequently bought together" directly above the main add-to-cart form 
+		// Hook changed from `woocommerce_before_add_to_cart_button` to prevent invalid HTML nested forms
+		add_action('woocommerce_before_add_to_cart_form', [$this, 'display_frequently_bought_together'], 10);
 
 		// JavaScript: Inject bespoke AJAX handler for the nested FBT add-to-cart forms
 		add_action('wp_footer', [$this, 'inject_fbt_ajax_scripts']);
@@ -146,7 +147,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.7.1',
+				'1.7.2',
 				'all'
 			);
 

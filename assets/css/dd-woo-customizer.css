@@ -226,3 +226,6 @@ ul.products .woocommerce-text-align-center {
 .woocommerce ul.products li.product a.woocommerce-loop-product__link {
 	text-align: left;
 }
+.woocommerce div.product form.cart .variations label {
+	font-weight: 600;
+}

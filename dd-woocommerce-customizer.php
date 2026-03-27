@@ -164,7 +164,7 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-wrapper { margin-top: 25px; margin-bottom: 25px; width: 100% }
 				.dd-fbt-wrapper h4 { margin: 0 0 15px 0; font-size: 14px; color: #1e293b; font-weight: 600; }
 				.dd-fbt-list { display: flex; flex-direction: column; gap: 15px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;  }
-				.dd-fbt-item { position: relative; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; transition: all 0.2s ease; }
+				.dd-fbt-item { position: relative; padding: 15px;  border-radius: 8px; transition: all 0.2s ease; }
 				.dd-fbt-item:hover, .dd-fbt-item:focus-within { border-color: #ff0000; box-shadow: 0 2px 10px rgba(255,0,0,0.05); }
 				.dd-fbt-item.is-in-cart { border-color: #22c55e; background: #f0fdf4; }
 				.dd-fbt-badge { position: absolute; top: -10px; right: 15px; background: #22c55e; color: #fff; font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 12px; z-index: 2; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }

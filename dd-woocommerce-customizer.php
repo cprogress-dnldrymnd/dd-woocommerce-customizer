@@ -199,7 +199,7 @@ class DD_WooCommerce_Customizer
 				}
 				
 				/* Sub-Form Integrations */
-				.dd-fbt-action form.cart { margin: 12px 0 0 0 !important; padding: 12px 0 0 0 !important; border-top: 1px dashed #e2e8f0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+				.dd-fbt-action form.cart { margin: 12px 0 0 0 !important; padding: 12px 0 0 0 !important; border-top: 1px dashed #e2e8f0; display: flex; flex-wrap: wrap; gap: 10px; }
 				.dd-fbt-action form.cart .variations { margin: 0 0 10px 0 !important; width: 100%; border: none !important; }
 				.dd-fbt-action form.cart .variations th, .dd-fbt-action form.cart .variations td { padding: 4px 0 !important; background: transparent !important; display: block; }
 				.dd-fbt-action form.cart .variations select { width: 100%; max-width: 250px; font-size: 0.85rem; padding: 4px 8px; border-radius: 4px; }

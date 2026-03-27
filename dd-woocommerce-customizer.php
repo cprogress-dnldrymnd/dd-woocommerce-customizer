@@ -161,9 +161,9 @@ class DD_WooCommerce_Customizer
 				.upsells.products { margin-top: 4em; } 
 				
 				/* FBT Modern Layout Customization */
-				.dd-fbt-wrapper { margin-top: 25px; margin-bottom: 25px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; width: 100% }
-				.dd-fbt-wrapper h4 { margin: 0 0 15px 0; font-size: 1.1rem; color: #1e293b; font-weight: 600; }
-				.dd-fbt-list { display: flex; flex-direction: column; gap: 15px; }
+				.dd-fbt-wrapper { margin-top: 25px; margin-bottom: 25px; width: 100% }
+				.dd-fbt-wrapper h4 { margin: 0 0 15px 0; font-size: 14px; color: #1e293b; font-weight: 600; }
+				.dd-fbt-list { display: flex; flex-direction: column; gap: 15px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;  }
 				.dd-fbt-item { position: relative; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; transition: all 0.2s ease; }
 				.dd-fbt-item:hover, .dd-fbt-item:focus-within { border-color: #ff0000; box-shadow: 0 2px 10px rgba(255,0,0,0.05); }
 				.dd-fbt-item.is-in-cart { border-color: #22c55e; background: #f0fdf4; }

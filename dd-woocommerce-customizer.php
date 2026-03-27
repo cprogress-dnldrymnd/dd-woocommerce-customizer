@@ -175,6 +175,15 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-title { font-size: 0.95rem; font-weight: 500; text-decoration: none; color: var(--contrast); line-height: 1.3; }
 				.dd-fbt-title:hover { color: #ff0000; }
 				.dd-fbt-price { font-size: 0.95rem; font-weight: 700; color: #ff0000; text-align: right; }
+
+				.dd-fbt-wrapper div.product.do-quantity-buttons form.cart {
+				    margin: 0 !important;
+    				padding: 0 !important;
+				}
+
+				.dd-fbt-wrapper div.product form.cart .variations tr {
+					flex-direction: row;
+				}
 				
 				/* Sub-Form Integrations */
 				.dd-fbt-action form.cart { margin: 12px 0 0 0 !important; padding: 12px 0 0 0 !important; border-top: 1px dashed #e2e8f0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
@@ -986,7 +995,7 @@ class DD_WooCommerce_Customizer
 
 					// Determine context: Is this an FBT module or the main product form?
 					var $fbtItem = $form.closest('.dd-fbt-item');
-					var isFbt    = $fbtItem.length > 0;
+					var isFbt = $fbtItem.length > 0;
 
 					// Respect WooCommerce's native disabled state (e.g., missing variation selection)
 					if ($btn.is('.disabled')) {
@@ -1025,7 +1034,7 @@ class DD_WooCommerce_Customizer
 
 								// Safely remove the loading states
 								$btn.removeClass('loading wc-loading');
-								
+
 								// Apply contextual UX feedback based on form location
 								if (isFbt) {
 									$fbtItem.addClass('is-in-cart');

@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, and reordered upsells.
- * Version:     1.7.8
+ * Version:     1.8.0
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -78,21 +78,22 @@ class DD_WooCommerce_Customizer
 		// Layout: Display "Frequently bought together" safely BELOW the main add-to-cart form 
 		add_action('woocommerce_after_add_to_cart_form', [$this, 'display_frequently_bought_together'], 10);
 
-		// JavaScript: Inject bespoke AJAX handler for the nested FBT add-to-cart forms
-		add_action('wp_footer', [$this, 'inject_fbt_ajax_scripts']);
+		// JavaScript: Inject bespoke AJAX handler globally for all product forms
+		add_action('wp_footer', [$this, 'inject_ajax_add_to_cart_scripts']);
 
 		// AJAX Endpoints: Handle Custom Add to Cart for both Simple and Variable Products
-		add_action('wp_ajax_dd_fbt_add_to_cart', [$this, 'handle_fbt_ajax_add_to_cart']);
-		add_action('wp_ajax_nopriv_dd_fbt_add_to_cart', [$this, 'handle_fbt_ajax_add_to_cart']);
+		add_action('wp_ajax_dd_ajax_add_to_cart', [$this, 'handle_ajax_add_to_cart']);
+		add_action('wp_ajax_nopriv_dd_ajax_add_to_cart', [$this, 'handle_ajax_add_to_cart']);
 	}
 
 	/**
-	 * Custom AJAX endpoint to process cart additions for complex FBT variable products.
+	 * Custom AJAX endpoint to process cart additions for complex variable products.
+	 * Handled globally for the main product form and the FBT items.
 	 *
-	 * @since 1.7.5
+	 * @since 1.8.0
 	 * @return void
 	 */
-	public function handle_fbt_ajax_add_to_cart()
+	public function handle_ajax_add_to_cart()
 	{
 		ob_start();
 
@@ -133,6 +134,7 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Enqueue the plugin's custom stylesheet and inline assets.
+	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
 	 *
 	 * @since 1.0.0
 	 * @return void
@@ -144,10 +146,11 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.7.8',
+				'1.8.0',
 				'all'
 			);
 
+			// Inline styles for the frontend variation-style download cards and modern FBT cross-sell layout
 			$custom_css = "
 				.dd-downloads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
 				.dd-download-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: flex-start; background: #f8fafc; transition: all 0.2s ease-in-out; }
@@ -190,7 +193,10 @@ class DD_WooCommerce_Customizer
 	}
 
 	/**
-	 * Output a custom opening HTML `<div>` wrapper.
+	 * Output a custom opening HTML `<div>` wrapper before the main WooCommerce content.
+	 *
+	 * @since 1.0.0
+	 * @return void
 	 */
 	public function add_custom_wrapper_open()
 	{
@@ -198,7 +204,10 @@ class DD_WooCommerce_Customizer
 	}
 
 	/**
-	 * Output a custom closing HTML `<div>` wrapper.
+	 * Output a custom closing HTML `<div>` wrapper after the main WooCommerce content.
+	 *
+	 * @since 1.0.0
+	 * @return void
 	 */
 	public function add_custom_wrapper_close()
 	{
@@ -206,7 +215,13 @@ class DD_WooCommerce_Customizer
 	}
 
 	/**
-	 * Render a custom checkbox in the Product -> Attributes tab.
+	 * Render a custom checkbox in the Product -> Attributes tab within the admin dashboard.
+	 * Utilizes multi-context ID resolution to maintain state during asynchronous Backbone.js renders.
+	 *
+	 * @since 1.2.3
+	 * @param WC_Product_Attribute $attribute The product attribute object.
+	 * @param int                  $i         The numeric index of the attribute loop.
+	 * @return void
 	 */
 	public function add_card_layout_checkbox($attribute, $i)
 	{
@@ -243,7 +258,11 @@ class DD_WooCommerce_Customizer
 	}
 
 	/**
-	 * Process and save the custom card layout configuration.
+	 * Process and save the custom card layout configuration upon product update.
+	 *
+	 * @since 1.2.2
+	 * @param WC_Product $product The WooCommerce product object currently being saved.
+	 * @return void
 	 */
 	public function save_card_layout_configuration($product)
 	{
@@ -275,6 +294,11 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Transform default variation dropdowns into interactive cards.
+	 *
+	 * @since 1.2.0
+	 * @param string $html Original HTML of the select dropdown.
+	 * @param array  $args Arguments passed to the variation dropdown.
+	 * @return string
 	 */
 	public function render_custom_variation_cards($html, $args)
 	{
@@ -355,6 +379,9 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Inject necessary JavaScript logic and CSS styling for the interactive variations.
+	 *
+	 * @since 1.1.1
+	 * @return void
 	 */
 	public function inject_variation_ui_assets()
 	{
@@ -472,6 +499,10 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Registers custom tabs within the WooCommerce Product Data meta box.
+	 *
+	 * @since 1.3.0
+	 * @param array $tabs Existing product data tabs.
+	 * @return array
 	 */
 	public function add_custom_product_data_tabs($tabs)
 	{
@@ -494,6 +525,9 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Outputs the HTML structures for the custom product data panels.
+	 *
+	 * @since 1.3.0
+	 * @return void
 	 */
 	public function add_custom_product_data_panels()
 	{
@@ -579,6 +613,8 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Helper method to render a single repeater row.
+	 *
+	 * @since 1.3.0
 	 */
 	private function render_repeater_row($index, $title = '', $url = '')
 	{
@@ -609,6 +645,8 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Enqueues scripts for the admin panel.
+	 *
+	 * @since 1.3.0
 	 */
 	public function enqueue_admin_scripts($hook)
 	{
@@ -677,6 +715,8 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Sanitizes and persists custom product meta fields.
+	 *
+	 * @since 1.3.0
 	 */
 	public function save_custom_product_meta_data($post_id)
 	{
@@ -701,6 +741,10 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Registers custom tabs on the WooCommerce Single Product frontend view.
+	 *
+	 * @since 1.3.0
+	 * @param array $tabs Current frontend tabs.
+	 * @return array
 	 */
 	public function add_frontend_product_tabs($tabs)
 	{
@@ -748,6 +792,8 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Modifies the default WooCommerce breadcrumb arguments.
+	 *
+	 * @since 1.4.0
 	 */
 	public function modify_breadcrumb_delimiter($defaults)
 	{
@@ -757,6 +803,8 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Disables core WooCommerce review and rating functionalities.
+	 *
+	 * @since 1.5.0
 	 */
 	public function disable_woocommerce_reviews()
 	{
@@ -787,6 +835,9 @@ class DD_WooCommerce_Customizer
 	/**
 	 * Reorders the single product page output to place "You May Also Like" (Upsells) 
 	 * after "Related Products".
+	 *
+	 * @since 1.6.0
+	 * @return void
 	 */
 	public function reorder_upsells_and_related_products()
 	{
@@ -796,8 +847,10 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Display "Frequently Bought Together" natively configured with dynamic add-to-cart injection.
+	 * Manages bespoke logic for explicitly selecting 'variation' cross-sells, converting them to
+	 * simple-click additions by injecting hidden attribute payloads to bypass core validation screens.
 	 *
-	 * @since 1.7.8
+	 * @since 1.7.7
 	 * @return void
 	 */
 	public function display_frequently_bought_together()
@@ -917,13 +970,7 @@ class DD_WooCommerce_Customizer
 				$GLOBALS['post']    = get_post($cross_sell->get_id());
 				setup_postdata($GLOBALS['post']);
 
-				// CRITICAL FIX: Temporarily disable custom variation cards so FBT variations use native, compact dropdowns
-				remove_filter('woocommerce_dropdown_variation_attribute_options_html', [$this, 'render_custom_variation_cards'], 10);
-
 				woocommerce_template_single_add_to_cart();
-
-				// Restore custom variation cards for the rest of the page
-				add_filter('woocommerce_dropdown_variation_attribute_options_html', [$this, 'render_custom_variation_cards'], 10, 2);
 			}
 
 			echo '</div>'; // end action
@@ -950,12 +997,13 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Injects specialized JavaScript handling to convert native WooCommerce variable/simple 
-	 * form POST submissions inside the FBT module into seamless AJAX events via a custom endpoint.
+	 * form POST submissions (both FBT modules and the primary global product form) into seamless 
+	 * AJAX events via a custom endpoint.
 	 *
-	 * @since 1.7.5
+	 * @since 1.8.0
 	 * @return void
 	 */
-	public function inject_fbt_ajax_scripts()
+	public function inject_ajax_add_to_cart_scripts()
 	{
 		if (! is_product()) {
 			return;
@@ -971,16 +1019,19 @@ class DD_WooCommerce_Customizer
 					});
 				}
 
-				// Intercept standard form submissions within the FBT wrappers
-				$(document).on('submit', '.dd-fbt-item form.cart', function(e) {
+				// Intercept ALL cart form submissions on the product page (Main product & FBT items)
+				$(document).on('submit', 'form.cart', function(e) {
 					e.preventDefault();
 
 					// CRITICAL: Prevent theme scripts (like Elementor/GeneratePress) from double-firing on this form
 					e.stopImmediatePropagation();
 
 					var $form = $(this);
-					var $item = $form.closest('.dd-fbt-item');
 					var $btn = $form.find('button[type="submit"]');
+
+					// Determine context: Is this an FBT module or the main product form?
+					var $fbtItem = $form.closest('.dd-fbt-item');
+					var isFbt = $fbtItem.length > 0;
 
 					// Respect WooCommerce's native disabled state (e.g., missing variation selection)
 					if ($btn.is('.disabled')) {
@@ -993,8 +1044,8 @@ class DD_WooCommerce_Customizer
 					// Utilize FormData to safely parse all inputs, including dynamically generated attribute variations
 					var formData = new FormData($form[0]);
 
-					// Route to the custom AJAX endpoint
-					formData.append('action', 'dd_fbt_add_to_cart');
+					// Route to the global custom AJAX endpoint
+					formData.append('action', 'dd_ajax_add_to_cart');
 
 					// Ensure the core product ID is passed (especially crucial for simple products lacking variation IDs)
 					var productId = $btn.val() || $form.find('input[name="add-to-cart"]').val();
@@ -1011,7 +1062,7 @@ class DD_WooCommerce_Customizer
 						processData: false,
 						contentType: false,
 						success: function(response) {
-							// FIX: WC_AJAX::get_refreshed_fragments() returns raw JSON object with 'fragments', not 'success'
+							// Check if raw fragment JSON object is returned
 							if (response && response.fragments) {
 
 								// Trigger native WooCommerce fragment refresh to update headers/minicarts
@@ -1019,10 +1070,20 @@ class DD_WooCommerce_Customizer
 
 								// Safely remove the loading states
 								$btn.removeClass('loading wc-loading');
-								$item.addClass('is-in-cart');
 
-								if ($item.find('.dd-fbt-badge').length === 0) {
-									$item.prepend('<span class="dd-fbt-badge">Added to cart</span>');
+								// Apply contextual UX feedback based on form location
+								if (isFbt) {
+									$fbtItem.addClass('is-in-cart');
+									if ($fbtItem.find('.dd-fbt-badge').length === 0) {
+										$fbtItem.prepend('<span class="dd-fbt-badge">Added to cart</span>');
+									}
+								} else {
+									// For the main product, provide a clear visual UX cue that the item was added
+									var originalText = $btn.html();
+									$btn.html('Added to cart!');
+									setTimeout(function() {
+										$btn.html(originalText);
+									}, 3000);
 								}
 
 							} else if (response && response.success === false) {

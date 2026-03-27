@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, and reordered upsells.
- * Version:     1.8.2
+ * Version:     1.8.3
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -75,8 +75,9 @@ class DD_WooCommerce_Customizer
 		// Layout: Position "You May Also Like" (Upsells) below Related Products
 		add_action('init', [$this, 'reorder_upsells_and_related_products']);
 
-		// Layout: Display "Frequently bought together" safely BELOW the main add-to-cart form 
-		add_action('woocommerce_after_add_to_cart_form', [$this, 'display_frequently_bought_together'], 10);
+		// Layout: Display "Frequently bought together" safely BELOW the product meta
+		// The native meta data runs at priority 40, so hooking at 45 places it directly underneath.
+		add_action('woocommerce_single_product_summary', [$this, 'display_frequently_bought_together'], 45);
 
 		// JavaScript: Inject bespoke AJAX handler globally for all product forms
 		add_action('wp_footer', [$this, 'inject_ajax_add_to_cart_scripts']);
@@ -145,7 +146,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.8.2',
+				'1.8.3',
 				'all'
 			);
 
@@ -798,7 +799,7 @@ class DD_WooCommerce_Customizer
 	/**
 	 * Display "Frequently Bought Together" natively configured with dynamic add-to-cart injection.
 	 *
-	 * @since 1.8.1
+	 * @since 1.8.3
 	 * @return void
 	 */
 	public function display_frequently_bought_together()

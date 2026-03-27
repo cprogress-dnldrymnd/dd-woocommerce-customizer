@@ -77,6 +77,9 @@ class DD_WooCommerce_Customizer
 
 		// Layout: Display "Frequently bought together" directly above the add to cart/quantity inputs
 		add_action('woocommerce_before_add_to_cart_button', [$this, 'display_frequently_bought_together'], 10);
+
+		// JavaScript: Inject bespoke AJAX handler for the nested FBT add-to-cart forms
+		add_action('wp_footer', [$this, 'inject_fbt_ajax_scripts']);
 	}
 
 	/**
@@ -97,7 +100,7 @@ class DD_WooCommerce_Customizer
 				'all'
 			);
 
-			// Inline styles for the frontend variation-style download cards and cross-sell spacing
+			// Inline styles for the frontend variation-style download cards and modern FBT cross-sell layout
 			$custom_css = "
 				.dd-downloads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
 				.dd-download-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: flex-start; background: #f8fafc; transition: all 0.2s ease-in-out; }
@@ -106,17 +109,34 @@ class DD_WooCommerce_Customizer
 				.dd-download-btn { display: inline-flex; align-items: center; background: var(--accent); color: #fff; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-weight: 500; font-size: 0.75rem; transition: background 0.2s; }
 				.dd-download-btn:hover { background: #000; color: #fff; }
 				.dd-download-btn svg { width: 16px; height: 16px; margin-left: 8px; fill: currentColor; }
-				.upsells.products { margin-top: 4em; } /* Add spacing between Related and Upsells */
-				.dd-fbt-wrapper { margin-bottom: 20px; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; width: 100% }
-				.dd-fbt-wrapper h4 { margin: 0 0 10px 0; font-size: 1.1rem; color: #1e293b; }
-				.dd-fbt-list { list-style: none; padding: 0; margin: 0; }
-				.dd-fbt-item { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
-				.dd-fbt-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-				.dd-fbt-item img { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+				.upsells.products { margin-top: 4em; } 
+				
+				/* FBT Modern Layout Customization */
+				.dd-fbt-wrapper { margin-bottom: 25px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; width: 100% }
+				.dd-fbt-wrapper h4 { margin: 0 0 15px 0; font-size: 1.1rem; color: #1e293b; font-weight: 600; }
+				.dd-fbt-list { display: flex; flex-direction: column; gap: 15px; }
+				.dd-fbt-item { position: relative; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; transition: all 0.2s ease; }
+				.dd-fbt-item:hover, .dd-fbt-item:focus-within { border-color: #ff0000; box-shadow: 0 2px 10px rgba(255,0,0,0.05); }
+				.dd-fbt-item.is-in-cart { border-color: #22c55e; background: #f0fdf4; }
+				.dd-fbt-badge { position: absolute; top: -10px; right: 15px; background: #22c55e; color: #fff; font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 12px; z-index: 2; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+				.dd-fbt-main { display: flex; align-items: center; gap: 15px; }
+				.dd-fbt-main img { width: 55px; height: 55px; object-fit: cover; border-radius: 6px; flex-shrink: 0; border: 1px solid #f1f5f9; }
 				.dd-fbt-details { display: flex; flex-direction: column; flex-grow: 1; }
-				.dd-fbt-title { font-size: 0.9rem; font-weight: 500; text-decoration: none; color: #334155; }
-				.dd-fbt-title:hover { color: #000; }
-				.dd-fbt-price { font-size: 0.85rem; font-weight: 600; color: #1e293b; }
+				.dd-fbt-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+				.dd-fbt-title { font-size: 0.95rem; font-weight: 500; text-decoration: none; color: #334155; line-height: 1.3; }
+				.dd-fbt-title:hover { color: #ff0000; }
+				.dd-fbt-price { font-size: 0.95rem; font-weight: 700; color: #ff0000; text-align: right; }
+				
+				/* Sub-Form Integrations */
+				.dd-fbt-action form.cart { margin: 12px 0 0 0 !important; padding: 12px 0 0 0 !important; border-top: 1px dashed #e2e8f0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+				.dd-fbt-action form.cart .variations { margin: 0 0 10px 0 !important; width: 100%; border: none !important; }
+				.dd-fbt-action form.cart .variations th, .dd-fbt-action form.cart .variations td { padding: 4px 0 !important; background: transparent !important; display: block; }
+				.dd-fbt-action form.cart .variations select { width: 100%; max-width: 250px; font-size: 0.85rem; padding: 4px 8px; border-radius: 4px; }
+				.dd-fbt-action form.cart .quantity { margin-right: 10px; }
+				.dd-fbt-action form.cart button.single_add_to_cart_button { background: #ff0000; color: #fff; border: none; padding: 8px 20px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: opacity 0.2s; flex-shrink: 0; }
+				.dd-fbt-action form.cart button.single_add_to_cart_button:hover { opacity: 0.9; }
+				.dd-fbt-action form.cart button.single_add_to_cart_button.disabled { background: #ccc !important; cursor: not-allowed; }
+				.dd-fbt-action form.cart button.single_add_to_cart_button.loading { opacity: 0.5; pointer-events: none; }
 			";
 			wp_add_inline_style('dd-woo-customizer-css', $custom_css);
 		}
@@ -683,17 +703,14 @@ class DD_WooCommerce_Customizer
 	 */
 	public function reorder_upsells_and_related_products()
 	{
-		// Remove original upsell display
 		remove_action('woocommerce_after_single_product_summary', 'woocommerce_upsell_display', 15);
-
-		// Re-add it with a higher priority number (appears later in the DOM) 
-		// Related Products usually fires at priority 20.
 		add_action('woocommerce_after_single_product_summary', 'woocommerce_upsell_display', 25);
 	}
 
 	/**
-	 * Display "Frequently Bought Together" (derived from Cross-sells) above the Add to Cart UI.
-	 * Generates a styled, compact list suited for the limited space available directly above the quantity field.
+	 * Display "Frequently Bought Together" natively configured with dynamic add-to-cart injection.
+	 * By temporarily switching the global $product variable, we force WooCommerce to render
+	 * full, form-capable single add-to-cart templates (including complex variable dropdowns).
 	 *
 	 * @since 1.7.0
 	 * @return void
@@ -706,44 +723,149 @@ class DD_WooCommerce_Customizer
 			return;
 		}
 
-		// Retrieve connected cross-sell product IDs from the current product instance
 		$cross_sell_ids = $product->get_cross_sell_ids();
 
-		// Exit early if no cross-sells are configured to prevent rendering empty wrappers
 		if (empty($cross_sell_ids)) {
 			return;
 		}
 
+		// Retrieve IDs of all products currently in the user's cart to handle the dynamic tag
+		$cart_product_ids = [];
+		if (is_object(WC()->cart)) {
+			foreach (WC()->cart->get_cart() as $cart_item) {
+				$cart_product_ids[] = $cart_item['product_id'];
+			}
+		}
+
 		echo '<div class="dd-fbt-wrapper">';
 		echo '<h4>' . esc_html__('Frequently bought together', 'dd-woo-customizer') . '</h4>';
-		echo '<ul class="dd-fbt-list">';
+		echo '<div class="dd-fbt-list">'; // Refactored from ul/li to robust divs for nested form handling
+
+		// Backup the primary product instance to restore post-loop
+		$original_product = $product;
 
 		foreach ($cross_sell_ids as $cross_sell_id) {
 			$cross_sell = wc_get_product($cross_sell_id);
 
-			// Validate the product instance and ensure frontend visibility before rendering
 			if (! $cross_sell || ! $cross_sell->is_visible()) {
 				continue;
 			}
 
-			echo '<li class="dd-fbt-item">';
+			$is_in_cart = in_array($cross_sell_id, $cart_product_ids);
+			$cart_class = $is_in_cart ? ' is-in-cart' : '';
+
+			echo '<div class="dd-fbt-item' . esc_attr($cart_class) . '">';
+
+			if ($is_in_cart) {
+				echo '<span class="dd-fbt-badge">' . esc_html__('Added to cart', 'dd-woo-customizer') . '</span>';
+			}
+
+			echo '<div class="dd-fbt-main">';
 			
-			// Output the linked gallery thumbnail
 			echo '<a href="' . esc_url($cross_sell->get_permalink()) . '">';
 			echo wp_kses_post($cross_sell->get_image('woocommerce_gallery_thumbnail'));
 			echo '</a>';
 
-			// Output textual metadata (Title and formatted price)
 			echo '<div class="dd-fbt-details">';
+			echo '<div class="dd-fbt-header-row">';
 			echo '<a href="' . esc_url($cross_sell->get_permalink()) . '" class="dd-fbt-title">' . esc_html($cross_sell->get_name()) . '</a>';
 			echo '<span class="dd-fbt-price">' . wp_kses_post($cross_sell->get_price_html()) . '</span>';
 			echo '</div>';
+			echo '</div>'; // end details
 
-			echo '</li>';
+			echo '</div>'; // end main
+
+			echo '<div class="dd-fbt-action">';
+			// Temporarily mutate the global context to generate the native add-to-cart form logic
+			$GLOBALS['product'] = $cross_sell;
+			setup_postdata($cross_sell->get_id());
+			
+			// This generates the robust form mapping (e.g., Simple products get a standard form, Variables get dynamic dropdowns).
+			woocommerce_template_single_add_to_cart();
+			
+			echo '</div>'; // end action
+
+			echo '</div>'; // end item
 		}
 
-		echo '</ul>';
+		// Strictly restore global execution environment
+		$GLOBALS['product'] = $original_product;
+		wp_reset_postdata();
+
 		echo '</div>';
+		echo '</div>';
+	}
+
+	/**
+	 * Injects specialized JavaScript handling to convert native WooCommerce variable/simple 
+	 * form POST submissions inside the FBT module into seamless AJAX events.
+	 *
+	 * @since 1.7.0
+	 * @return void
+	 */
+	public function inject_fbt_ajax_scripts()
+	{
+		if (! is_product()) {
+			return;
+		}
+	?>
+		<script type="text/javascript">
+			jQuery(document).ready(function($) {
+				// Intercept standard form submissions within the FBT wrappers
+				$(document).on('submit', '.dd-fbt-item form.cart', function(e) {
+					e.preventDefault();
+					
+					var $form = $(this);
+					var $item = $form.closest('.dd-fbt-item');
+					var $btn = $form.find('button[type="submit"]');
+
+					// Respect WooCommerce's native disabled state (e.g., missing variation selection)
+					if ($btn.is('.disabled')) {
+						return false;
+					}
+
+					var formData = $form.serializeArray();
+					
+					// WooCommerce core explicitly requires the 'add-to-cart' value passed via POST to fire hooks
+					var productId = $btn.val() || $form.find('input[name="add-to-cart"]').val();
+					formData.push({ name: 'add-to-cart', value: productId });
+
+					$btn.addClass('loading');
+					
+					// Resolve local endpoint dynamically or default to standard ajax hook routing
+					var ajaxUrl = (typeof wc_add_to_cart_params !== 'undefined') 
+						? wc_add_to_cart_params.wc_ajax_url.toString().replace( '%%endpoint%%', 'add_to_cart' ) 
+						: '/?wc-ajax=add_to_cart';
+
+					$.ajax({
+						type: 'POST',
+						url: ajaxUrl,
+						data: $.param(formData),
+						success: function(response) {
+							if (response.error && response.product_url) {
+								window.location = response.product_url;
+								return;
+							}
+							
+							// Trigger native WooCommerce fragment refresh to update headers/minicarts
+							$(document.body).trigger('added_to_cart', [response.fragments, response.cart_hash, $btn]);
+							
+							$btn.removeClass('loading');
+							$item.addClass('is-in-cart');
+							
+							if ($item.find('.dd-fbt-badge').length === 0) {
+								$item.prepend('<span class="dd-fbt-badge">Added to cart</span>');
+							}
+						},
+						error: function() {
+							$btn.removeClass('loading');
+							alert('An error occurred. Please try again.');
+						}
+					});
+				});
+			});
+		</script>
+	<?php
 	}
 }
 

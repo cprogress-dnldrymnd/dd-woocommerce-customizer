@@ -154,9 +154,9 @@ class DD_WooCommerce_Customizer
 				.dd-downloads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
 				.dd-download-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: flex-start; background: #f8fafc; transition: all 0.2s ease-in-out; }
 				.dd-download-card:hover { border-color: #cbd5e1; background: #f1f5f9; }
-				.dd-download-card h4 { margin: 0 0 12px 0; font-size: 1.25rem; font-weight: 600; color: #1e293b; }
-				.dd-download-btn { display: inline-flex; align-items: center; background: var(--accent); color: #fff; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-weight: 500; font-size: 0.75rem; transition: background 0.2s; }
-				.dd-download-btn:hover { background: #000; color: #fff; }
+				.dd-download-card h4 { margin: 0 0 12px 0; font-size: 1.25rem; font-weight: 600; color: var(--contrast); }
+				.dd-download-btn { display: inline-flex; align-items: center; background: var(--accent); color: var(--base-3); padding: 8px 12px; text-decoration: none; border-radius: 4px; font-weight: 500; font-size: 0.75rem; transition: background 0.2s; }
+				.dd-download-btn:hover { background: var(--contrast); color: var(--base-3); }
 				.dd-download-btn svg { width: 16px; height: 16px; margin-left: 8px; fill: currentColor; }
 				.upsells.products { margin-top: 4em; } 
 				
@@ -164,15 +164,15 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-wrapper { margin-top: 25px; margin-bottom: 25px; width: 100% }
 				.dd-fbt-wrapper h4 { margin: 0 0 15px 0; font-size: 14px; font-weight: 600; }
 				.dd-fbt-list { display: flex; flex-direction: column; gap: 15px; }
-				.dd-fbt-item { position: relative; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; transition: all 0.2s ease; }
+				.dd-fbt-item { position: relative; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: var(--base-3); transition: all 0.2s ease; }
 				.dd-fbt-item:hover, .dd-fbt-item:focus-within { border-color: #ff0000; box-shadow: 0 2px 10px rgba(255,0,0,0.05); }
 				.dd-fbt-item.is-in-cart { border-color: #22c55e; background: #f0fdf4; }
-				.dd-fbt-badge { position: absolute; top: -10px; right: 15px; background: #22c55e; color: #fff; font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 12px; z-index: 2; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+				.dd-fbt-badge { position: absolute; top: -10px; right: 15px; background: #22c55e; color: var(--base-3); font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 12px; z-index: 2; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 				.dd-fbt-main { display: flex; align-items: center; gap: 15px; }
 				.dd-fbt-main img { width: 55px; height: 55px; object-fit: cover; border-radius: 6px; flex-shrink: 0; border: 1px solid #f1f5f9; }
 				.dd-fbt-details { display: flex; flex-direction: column; flex-grow: 1; }
 				.dd-fbt-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-				.dd-fbt-title { font-size: 0.95rem; font-weight: 500; text-decoration: none; color: #334155; line-height: 1.3; }
+				.dd-fbt-title { font-size: 0.95rem; font-weight: 500; text-decoration: none; color: var(--contrast); line-height: 1.3; }
 				.dd-fbt-title:hover { color: #ff0000; }
 				.dd-fbt-price { font-size: 0.95rem; font-weight: 700; color: #ff0000; text-align: right; }
 				
@@ -182,7 +182,7 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-action form.cart .variations th, .dd-fbt-action form.cart .variations td { padding: 4px 0 !important; background: transparent !important; display: block; }
 				.dd-fbt-action form.cart .variations select { width: 100%; max-width: 250px; font-size: 0.85rem; padding: 4px 8px; border-radius: 4px; }
 				.dd-fbt-action form.cart .quantity { margin-right: 10px; }
-				.dd-fbt-action form.cart button.single_add_to_cart_button { background: #ff0000; color: #fff; border: none; padding: 8px 20px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: opacity 0.2s; flex-shrink: 0; }
+				.dd-fbt-action form.cart button.single_add_to_cart_button { background: #ff0000; color: var(--base-3); border: none; padding: 8px 20px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: opacity 0.2s; flex-shrink: 0; }
 				.dd-fbt-action form.cart button.single_add_to_cart_button:hover { opacity: 0.9; }
 				.dd-fbt-action form.cart button.single_add_to_cart_button.disabled { background: #ccc !important; cursor: not-allowed; }
 				.dd-fbt-action form.cart button.single_add_to_cart_button.loading { opacity: 0.5; pointer-events: none; }
@@ -416,7 +416,7 @@ class DD_WooCommerce_Customizer
 			.dd-variation-card-title {
 				font-size: 15px;
 				font-weight: 500;
-				color: #1e293b;
+				color: var(--contrast);
 			}
 		</style>
 
@@ -557,7 +557,7 @@ class DD_WooCommerce_Customizer
 
 				.dd-repeater-content {
 					padding: 15px;
-					background: #fff;
+					background: var(--base-3);
 				}
 
 				.dd-repeater-row.collapsed .dd-repeater-content {

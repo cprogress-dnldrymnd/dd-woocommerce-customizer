@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, and reordered upsells.
- * Version:     1.7.0
+ * Version:     1.7.1
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -80,6 +80,56 @@ class DD_WooCommerce_Customizer
 
 		// JavaScript: Inject bespoke AJAX handler for the nested FBT add-to-cart forms
 		add_action('wp_footer', [$this, 'inject_fbt_ajax_scripts']);
+
+		// AJAX Endpoints: Handle Custom Add to Cart for both Simple and Variable Products
+		add_action('wp_ajax_dd_fbt_add_to_cart', [$this, 'handle_fbt_ajax_add_to_cart']);
+		add_action('wp_ajax_nopriv_dd_fbt_add_to_cart', [$this, 'handle_fbt_ajax_add_to_cart']);
+	}
+
+	/**
+	 * Custom AJAX endpoint to process cart additions for complex FBT variable products.
+	 * Bypasses native endpoint limitations by manually extracting attributes and executing core cart logic.
+	 *
+	 * @since 1.7.1
+	 * @return void
+	 */
+	public function handle_fbt_ajax_add_to_cart()
+	{
+		ob_start();
+
+		$product_id   = apply_filters('woocommerce_add_to_cart_product_id', absint($_POST['product_id']));
+		$quantity     = empty($_POST['quantity']) ? 1 : wc_stock_amount(wp_unslash($_POST['quantity']));
+		$variation_id = isset($_POST['variation_id']) ? absint($_POST['variation_id']) : 0;
+		$passed_validation = apply_filters('woocommerce_add_to_cart_validation', true, $product_id, $quantity, $variation_id, $_POST);
+
+		if (!$passed_validation) {
+			wp_send_json_error(['message' => __('Validation failed.', 'dd-woo-customizer')]);
+		}
+
+		$cart_item_key = false;
+
+		// Handle variable products by extracting exact attribute selections from POST data
+		if ($variation_id) {
+			$variation = [];
+			foreach ($_POST as $key => $value) {
+				if (strpos($key, 'attribute_') === 0) {
+					$variation[$key] = wc_clean(wp_unslash($value));
+				}
+			}
+			$cart_item_key = WC()->cart->add_to_cart($product_id, $quantity, $variation_id, $variation);
+		} else {
+			// Handle standard simple products
+			$cart_item_key = WC()->cart->add_to_cart($product_id, $quantity);
+		}
+
+		if ($cart_item_key) {
+			// Leverage WooCommerce core fragments generation to update minicart UIs
+			WC_AJAX::get_refreshed_fragments();
+		} else {
+			wp_send_json_error(['message' => __('Failed to add product to cart.', 'dd-woo-customizer')]);
+		}
+
+		wp_die();
 	}
 
 	/**
@@ -96,7 +146,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.7.0',
+				'1.7.1',
 				'all'
 			);
 
@@ -798,9 +848,10 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Injects specialized JavaScript handling to convert native WooCommerce variable/simple 
-	 * form POST submissions inside the FBT module into seamless AJAX events.
+	 * form POST submissions inside the FBT module into seamless AJAX events via a custom endpoint.
+	 * Explicitly reinitializes variation scripts to ensure disabled states toggle correctly.
 	 *
-	 * @since 1.7.0
+	 * @since 1.7.1
 	 * @return void
 	 */
 	public function inject_fbt_ajax_scripts()
@@ -811,55 +862,68 @@ class DD_WooCommerce_Customizer
 	?>
 		<script type="text/javascript">
 			jQuery(document).ready(function($) {
+				
+				// Re-initialize WooCommerce variation scripts for dynamically injected FBT forms
+				if ($.fn.wc_variation_form) {
+					$('.dd-fbt-item .variations_form').each(function() {
+						$(this).wc_variation_form();
+					});
+				}
+
 				// Intercept standard form submissions within the FBT wrappers
 				$(document).on('submit', '.dd-fbt-item form.cart', function(e) {
 					e.preventDefault();
 					
 					var $form = $(this);
 					var $item = $form.closest('.dd-fbt-item');
-					var $btn = $form.find('button[type="submit"]');
+					var $btn  = $form.find('button[type="submit"]');
 
 					// Respect WooCommerce's native disabled state (e.g., missing variation selection)
 					if ($btn.is('.disabled')) {
 						return false;
 					}
 
-					var formData = $form.serializeArray();
-					
-					// WooCommerce core explicitly requires the 'add-to-cart' value passed via POST to fire hooks
-					var productId = $btn.val() || $form.find('input[name="add-to-cart"]').val();
-					formData.push({ name: 'add-to-cart', value: productId });
-
 					$btn.addClass('loading');
 					
-					// Resolve local endpoint dynamically or default to standard ajax hook routing
-					var ajaxUrl = (typeof wc_add_to_cart_params !== 'undefined') 
-						? wc_add_to_cart_params.wc_ajax_url.toString().replace( '%%endpoint%%', 'add_to_cart' ) 
-						: '/?wc-ajax=add_to_cart';
+					// Utilize FormData to safely parse all inputs, including dynamically generated attribute variations
+					var formData = new FormData($form[0]);
+					
+					// Route to the custom AJAX endpoint
+					formData.append('action', 'dd_fbt_add_to_cart');
+
+					// Ensure the core product ID is passed (especially crucial for simple products lacking variation IDs)
+					var productId = $btn.val() || $form.find('input[name="add-to-cart"]').val();
+					if (productId) {
+						formData.append('product_id', productId);
+					}
+
+					var ajaxUrl = (typeof woocommerce_params !== 'undefined') ? woocommerce_params.ajax_url : '/wp-admin/admin-ajax.php';
 
 					$.ajax({
 						type: 'POST',
 						url: ajaxUrl,
-						data: $.param(formData),
+						data: formData,
+						processData: false,
+						contentType: false,
 						success: function(response) {
-							if (response.error && response.product_url) {
-								window.location = response.product_url;
-								return;
-							}
-							
-							// Trigger native WooCommerce fragment refresh to update headers/minicarts
-							$(document.body).trigger('added_to_cart', [response.fragments, response.cart_hash, $btn]);
-							
-							$btn.removeClass('loading');
-							$item.addClass('is-in-cart');
-							
-							if ($item.find('.dd-fbt-badge').length === 0) {
-								$item.prepend('<span class="dd-fbt-badge">Added to cart</span>');
+							if (response.success) {
+								// Trigger native WooCommerce fragment refresh to update headers/minicarts
+								$(document.body).trigger('added_to_cart', [response.fragments, response.cart_hash, $btn]);
+								
+								$btn.removeClass('loading');
+								$item.addClass('is-in-cart');
+								
+								if ($item.find('.dd-fbt-badge').length === 0) {
+									$item.prepend('<span class="dd-fbt-badge">Added to cart</span>');
+								}
+							} else {
+								$btn.removeClass('loading');
+								alert(response.data.message || 'Failed to add item to cart.');
 							}
 						},
 						error: function() {
 							$btn.removeClass('loading');
-							alert('An error occurred. Please try again.');
+							alert('An error occurred during network execution. Please try again.');
 						}
 					});
 				});

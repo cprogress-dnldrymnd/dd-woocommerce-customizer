@@ -1,5 +1,6 @@
 .single-product {
     background-color: #ebebeb;
+	overflow-x: hidden;
 }
 .single-product .inside-article {
     background-color: transparent;
@@ -236,3 +237,5 @@ ul.products .woocommerce-text-align-center {
 .dd-fbt-action form.cart {
 	align-items: unset;
 }
+
+

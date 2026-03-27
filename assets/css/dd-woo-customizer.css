@@ -229,3 +229,6 @@ ul.products .woocommerce-text-align-center {
 .woocommerce div.product form.cart .variations label {
 	font-weight: 600;
 }
+.woocommerce a.added_to_cart {
+	display: none;
+}

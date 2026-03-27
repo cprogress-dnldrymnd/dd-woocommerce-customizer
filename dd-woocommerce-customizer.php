@@ -182,7 +182,20 @@ class DD_WooCommerce_Customizer
 				}
 
 				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper .variations tr {
-					flex-direction: row;
+				    flex-direction: row;
+					align-items: center;
+					gap: 1rem;
+				}
+				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper .variations tr td{
+					flex-grow: 1;
+				}
+				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper .variations tr th{
+					flex: 0 0 auto;
+				}
+
+				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper form.cart .variations th {
+					padding: 0;
+					margin: 0;
 				}
 				
 				/* Sub-Form Integrations */

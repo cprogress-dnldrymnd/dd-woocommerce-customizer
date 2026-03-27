@@ -270,6 +270,9 @@ ul.products .woocommerce-text-align-center {
 		overflow-x: hidden;
 		--padding-x: 1.875rem;
 	}
+	.woocommerce div.product .product_title {
+		font-size: 1.5rem;
+	}
 }
 
 

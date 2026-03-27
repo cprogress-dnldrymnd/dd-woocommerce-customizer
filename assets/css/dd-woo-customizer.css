@@ -3,6 +3,9 @@
 	overflow-x: hidden;
 	--padding-x: 2.5rem;
 }
+html {
+	overflow-x: hidden;
+}
 .single-product .grid-container {
 	max-width: 100%;
 }

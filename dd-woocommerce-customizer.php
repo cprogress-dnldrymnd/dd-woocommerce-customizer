@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, and reordered upsells.
- * Version:     1.8.1
+ * Version:     1.8.2
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -145,7 +145,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.8.1',
+				'1.8.2',
 				'all'
 			);
 
@@ -1061,5 +1061,9 @@ class DD_WooCommerce_Customizer
 	}
 }
 
-// Initialize the plugin instance.
-new DD_WooCommerce_Customizer();
+// Initialize the plugin instance only if WooCommerce is active to prevent fatal errors on deactivation.
+add_action('plugins_loaded', function () {
+	if (class_exists('WooCommerce')) {
+		new DD_WooCommerce_Customizer();
+	}
+});

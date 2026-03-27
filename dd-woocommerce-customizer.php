@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, and reordered upsells.
- * Version:     1.7.7
+ * Version:     1.7.8
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -76,7 +76,6 @@ class DD_WooCommerce_Customizer
 		add_action('init', [$this, 'reorder_upsells_and_related_products']);
 
 		// Layout: Display "Frequently bought together" safely BELOW the main add-to-cart form 
-		// Hook changed to `woocommerce_after_add_to_cart_form` for visual placement at the bottom
 		add_action('woocommerce_after_add_to_cart_form', [$this, 'display_frequently_bought_together'], 10);
 
 		// JavaScript: Inject bespoke AJAX handler for the nested FBT add-to-cart forms
@@ -89,7 +88,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Custom AJAX endpoint to process cart additions for complex FBT variable products.
-	 * Bypasses native endpoint limitations by manually extracting attributes and executing core cart logic.
 	 *
 	 * @since 1.7.5
 	 * @return void
@@ -125,7 +123,6 @@ class DD_WooCommerce_Customizer
 
 		if ($cart_item_key) {
 			// Leverage WooCommerce core fragments generation to update minicart UIs.
-			// Note: This function automatically calls wp_die() and returns raw JSON (not a standard success response)
 			WC_AJAX::get_refreshed_fragments();
 		} else {
 			wp_send_json_error(['message' => __('Failed to add product to cart.', 'dd-woo-customizer')]);
@@ -136,7 +133,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Enqueue the plugin's custom stylesheet and inline assets.
-	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
 	 *
 	 * @since 1.0.0
 	 * @return void
@@ -148,11 +144,10 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.7.7',
+				'1.7.8',
 				'all'
 			);
 
-			// Inline styles for the frontend variation-style download cards and modern FBT cross-sell layout
 			$custom_css = "
 				.dd-downloads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
 				.dd-download-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: flex-start; background: #f8fafc; transition: all 0.2s ease-in-out; }
@@ -195,10 +190,7 @@ class DD_WooCommerce_Customizer
 	}
 
 	/**
-	 * Output a custom opening HTML `<div>` wrapper before the main WooCommerce content.
-	 *
-	 * @since 1.0.0
-	 * @return void
+	 * Output a custom opening HTML `<div>` wrapper.
 	 */
 	public function add_custom_wrapper_open()
 	{
@@ -206,10 +198,7 @@ class DD_WooCommerce_Customizer
 	}
 
 	/**
-	 * Output a custom closing HTML `<div>` wrapper after the main WooCommerce content.
-	 *
-	 * @since 1.0.0
-	 * @return void
+	 * Output a custom closing HTML `<div>` wrapper.
 	 */
 	public function add_custom_wrapper_close()
 	{
@@ -217,13 +206,7 @@ class DD_WooCommerce_Customizer
 	}
 
 	/**
-	 * Render a custom checkbox in the Product -> Attributes tab within the admin dashboard.
-	 * Utilizes multi-context ID resolution to maintain state during asynchronous Backbone.js renders.
-	 *
-	 * @since 1.2.3
-	 * @param WC_Product_Attribute $attribute The product attribute object.
-	 * @param int                  $i         The numeric index of the attribute loop.
-	 * @return void
+	 * Render a custom checkbox in the Product -> Attributes tab.
 	 */
 	public function add_card_layout_checkbox($attribute, $i)
 	{
@@ -260,11 +243,7 @@ class DD_WooCommerce_Customizer
 	}
 
 	/**
-	 * Process and save the custom card layout configuration upon product update.
-	 *
-	 * @since 1.2.2
-	 * @param WC_Product $product The WooCommerce product object currently being saved.
-	 * @return void
+	 * Process and save the custom card layout configuration.
 	 */
 	public function save_card_layout_configuration($product)
 	{
@@ -296,11 +275,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Transform default variation dropdowns into interactive cards.
-	 *
-	 * @since 1.2.0
-	 * @param string $html Original HTML of the select dropdown.
-	 * @param array  $args Arguments passed to the variation dropdown.
-	 * @return string
 	 */
 	public function render_custom_variation_cards($html, $args)
 	{
@@ -381,9 +355,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Inject necessary JavaScript logic and CSS styling for the interactive variations.
-	 *
-	 * @since 1.1.1
-	 * @return void
 	 */
 	public function inject_variation_ui_assets()
 	{
@@ -501,10 +472,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Registers custom tabs within the WooCommerce Product Data meta box.
-	 *
-	 * @since 1.3.0
-	 * @param array $tabs Existing product data tabs.
-	 * @return array
 	 */
 	public function add_custom_product_data_tabs($tabs)
 	{
@@ -527,9 +494,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Outputs the HTML structures for the custom product data panels.
-	 *
-	 * @since 1.3.0
-	 * @return void
 	 */
 	public function add_custom_product_data_panels()
 	{
@@ -615,8 +579,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Helper method to render a single repeater row.
-	 *
-	 * @since 1.3.0
 	 */
 	private function render_repeater_row($index, $title = '', $url = '')
 	{
@@ -647,8 +609,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Enqueues scripts for the admin panel.
-	 *
-	 * @since 1.3.0
 	 */
 	public function enqueue_admin_scripts($hook)
 	{
@@ -717,8 +677,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Sanitizes and persists custom product meta fields.
-	 *
-	 * @since 1.3.0
 	 */
 	public function save_custom_product_meta_data($post_id)
 	{
@@ -743,10 +701,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Registers custom tabs on the WooCommerce Single Product frontend view.
-	 *
-	 * @since 1.3.0
-	 * @param array $tabs Current frontend tabs.
-	 * @return array
 	 */
 	public function add_frontend_product_tabs($tabs)
 	{
@@ -794,8 +748,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Modifies the default WooCommerce breadcrumb arguments.
-	 *
-	 * @since 1.4.0
 	 */
 	public function modify_breadcrumb_delimiter($defaults)
 	{
@@ -805,8 +757,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Disables core WooCommerce review and rating functionalities.
-	 *
-	 * @since 1.5.0
 	 */
 	public function disable_woocommerce_reviews()
 	{
@@ -837,9 +787,6 @@ class DD_WooCommerce_Customizer
 	/**
 	 * Reorders the single product page output to place "You May Also Like" (Upsells) 
 	 * after "Related Products".
-	 *
-	 * @since 1.6.0
-	 * @return void
 	 */
 	public function reorder_upsells_and_related_products()
 	{
@@ -849,10 +796,8 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Display "Frequently Bought Together" natively configured with dynamic add-to-cart injection.
-	 * Manages bespoke logic for explicitly selecting 'variation' cross-sells, converting them to
-	 * simple-click additions by injecting hidden attribute payloads to bypass core validation screens.
 	 *
-	 * @since 1.7.7
+	 * @since 1.7.8
 	 * @return void
 	 */
 	public function display_frequently_bought_together()
@@ -972,7 +917,13 @@ class DD_WooCommerce_Customizer
 				$GLOBALS['post']    = get_post($cross_sell->get_id());
 				setup_postdata($GLOBALS['post']);
 
+				// CRITICAL FIX: Temporarily disable custom variation cards so FBT variations use native, compact dropdowns
+				remove_filter('woocommerce_dropdown_variation_attribute_options_html', [$this, 'render_custom_variation_cards'], 10);
+
 				woocommerce_template_single_add_to_cart();
+
+				// Restore custom variation cards for the rest of the page
+				add_filter('woocommerce_dropdown_variation_attribute_options_html', [$this, 'render_custom_variation_cards'], 10, 2);
 			}
 
 			echo '</div>'; // end action
@@ -1000,7 +951,6 @@ class DD_WooCommerce_Customizer
 	/**
 	 * Injects specialized JavaScript handling to convert native WooCommerce variable/simple 
 	 * form POST submissions inside the FBT module into seamless AJAX events via a custom endpoint.
-	 * Explicitly handles raw fragment JSON returns to prevent TypeError thread crashing.
 	 *
 	 * @since 1.7.5
 	 * @return void

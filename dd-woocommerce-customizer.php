@@ -178,7 +178,7 @@ class DD_WooCommerce_Customizer
 
 				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper form.cart {
 				    margin: 0 !important;
-    				padding: 0 !important;
+    				padding: 10px 0 0  !important;
 				}
 
 				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper .variations tr {
@@ -203,7 +203,7 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-action form.cart .variations { margin: 0 0 10px 0 !important; width: 100%; border: none !important; }
 				.dd-fbt-action form.cart .variations th, .dd-fbt-action form.cart .variations td { padding: 4px 0 !important; background: transparent !important; display: block; }
 				.dd-fbt-action form.cart .variations select { width: 100%; max-width: 250px; font-size: 0.85rem; padding: 4px 8px; border-radius: 4px; }
-				.dd-fbt-action form.cart .quantity { margin-right: 10px; }
+				.dd-fbt-action form.cart .quantity { margin-right: 10px; border: 1px solid #e2e8f0 }
 				.dd-fbt-action form.cart button.single_add_to_cart_button { background: #ff0000; color: var(--base-3); border: none; padding: 8px 20px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: opacity 0.2s; flex-shrink: 0; }
 				.dd-fbt-action form.cart button.single_add_to_cart_button:hover { opacity: 0.9; }
 				.dd-fbt-action form.cart button.single_add_to_cart_button.disabled { background: #ccc !important; cursor: not-allowed; }

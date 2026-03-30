@@ -45,6 +45,8 @@ class DD_WooCommerce_Customizer
 
 		// Inject custom checkbox UI into the WooCommerce Product Attributes meta box.
 		add_action('woocommerce_after_product_attribute_settings', [$this, 'add_card_layout_checkbox'], 10, 2);
+
+		// Intercept the core product CRUD object save to persist configurations.
 		add_action('woocommerce_before_product_object_save', [$this, 'save_card_layout_configuration']);
 
 		// General Product Meta: Add Enquire Only Checkbox
@@ -53,12 +55,20 @@ class DD_WooCommerce_Customizer
 
 		// Backend: Add Custom Product Data Tabs (Logical Partitioning)
 		add_filter('woocommerce_product_data_tabs', [$this, 'add_custom_product_data_tabs']);
+
+		// Backend: Add Custom Product Data Panels
 		add_action('woocommerce_product_data_panels', [$this, 'add_custom_product_data_panels']);
+
+		// Backend: Save Custom Product Meta Data
 		add_action('woocommerce_process_product_meta', [$this, 'save_custom_product_meta_data']);
+
+		// Backend: Enqueue Admin Scripts for Repeater & Media Uploader
 		add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
 
 		// Frontend: Add Custom Single Product Tabs
 		add_filter('woocommerce_product_tabs', [$this, 'add_frontend_product_tabs']);
+
+		// Frontend: Modify WooCommerce Breadcrumb Delimiter
 		add_filter('woocommerce_breadcrumb_defaults', [$this, 'modify_breadcrumb_delimiter']);
 
 		// System: Completely disable WooCommerce review and rating functionality
@@ -82,20 +92,27 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Render the Enquire Only checkbox in the general product data tab.
+	 * * @since 1.9.0
+	 * @return void
 	 */
 	public function add_enquire_only_checkbox()
 	{
 		echo '<div class="options_group">';
+
 		woocommerce_wp_checkbox([
-			'id' => '_dd_enquire_only',
-			'label' => __('Enquire Product Only', 'dd-woo-customizer'),
+			'id'          => '_dd_enquire_only',
+			'label'       => __('Enquire Product Only', 'dd-woo-customizer'),
 			'description' => __('Replaces the Add to Cart button with an Enquire Now overlay trigger.', 'dd-woo-customizer')
 		]);
+
 		echo '</div>';
 	}
 
 	/**
-	 * Save the Enquire Only checkbox data.
+	 * Save the Enquire Only checkbox data upon product update.
+	 * * @since 1.9.0
+	 * @param int $post_id The ID of the current product being saved.
+	 * @return void
 	 */
 	public function save_enquire_only_checkbox($post_id)
 	{
@@ -140,14 +157,18 @@ class DD_WooCommerce_Customizer
 		// 2. Process Composite FBT Items seamlessly
 		if (!empty($_POST['fbt_items'])) {
 			$fbt_items = json_decode(wp_unslash($_POST['fbt_items']), true);
+
 			if (is_array($fbt_items)) {
 				foreach ($fbt_items as $item) {
 					$item_id  = absint($item['id']);
 					$item_qty = absint($item['qty']);
+
 					if ($item_id && $item_qty) {
 						$fbt_prod = wc_get_product($item_id);
+
 						if ($fbt_prod) {
 							if ($fbt_prod->is_type('variation')) {
+								// Reconstruct full attributes mapping for the specific variation explicitly requested
 								WC()->cart->add_to_cart($fbt_prod->get_parent_id(), $item_qty, $item_id, $fbt_prod->get_attributes());
 							} else {
 								WC()->cart->add_to_cart($item_id, $item_qty);
@@ -159,6 +180,7 @@ class DD_WooCommerce_Customizer
 		}
 
 		if ($cart_item_key) {
+			// Leverage WooCommerce core fragments generation to update minicart UIs.
 			WC_AJAX::get_refreshed_fragments();
 		} else {
 			wp_send_json_error(['message' => __('Failed to add product to cart.', 'dd-woo-customizer')]);
@@ -169,6 +191,10 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Enqueue the plugin's custom stylesheet and inline assets.
+	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
+	 *
+	 * @since 1.0.0
+	 * @return void
 	 */
 	public function enqueue_custom_styles()
 	{
@@ -181,6 +207,7 @@ class DD_WooCommerce_Customizer
 				'all'
 			);
 
+			// Inline styles for the frontend variation-style download cards and modern FBT cross-sell layout
 			$custom_css = "
 				.dd-downloads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
 				.dd-download-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: flex-start; background: #f8fafc; transition: all 0.2s ease-in-out; }
@@ -222,24 +249,86 @@ class DD_WooCommerce_Customizer
 				/* Enquire Now Button overriding */
 				.dd-enquire-btn { width: 100%; margin-top: 15px; background: #ff0000 !important; color: #fff !important; border-radius: 4px; font-weight: 600; padding: 15px !important; border: none; cursor: pointer; transition: opacity 0.2s; }
 				.dd-enquire-btn:hover { opacity: 0.9; }
+
+				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper form.cart {
+				    margin: 0 !important;
+    				padding: 10px 0 0  !important;
+				}
+
+				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper .variations tr {
+				    flex-direction: row;
+					align-items: center;
+					gap: 1rem;
+				}
+				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper .variations tr td{
+					flex-grow: 1;
+				}
+				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper .variations tr th{
+					flex: 0 0 auto;
+				}
+
+				.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper.dd-fbt-wrapper form.cart .variations th {
+					padding: 0;
+					margin: 0;
+				}
 			";
 			wp_add_inline_style('dd-woo-customizer-css', $custom_css);
 		}
 	}
 
-	public function add_custom_wrapper_open() { echo '<div class="dd-woo-custom-container">'; }
-	public function add_custom_wrapper_close() { echo '</div>'; }
+	/**
+	 * Output a custom opening HTML `<div>` wrapper before the main WooCommerce content.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public function add_custom_wrapper_open()
+	{
+		echo '<div class="dd-woo-custom-container">';
+	}
 
+	/**
+	 * Output a custom closing HTML `<div>` wrapper after the main WooCommerce content.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public function add_custom_wrapper_close()
+	{
+		echo '</div>';
+	}
+
+	/**
+	 * Render a custom checkbox in the Product -> Attributes tab within the admin dashboard.
+	 * Utilizes multi-context ID resolution to maintain state during asynchronous Backbone.js renders.
+	 *
+	 * @since 1.2.3
+	 * @param WC_Product_Attribute $attribute The product attribute object.
+	 * @param int                  $i         The numeric index of the attribute loop.
+	 * @return void
+	 */
 	public function add_card_layout_checkbox($attribute, $i)
 	{
 		global $post, $thepostid;
-		$is_card = false;
+
+		$is_card    = false;
 		$product_id = 0;
-		if (! empty($thepostid)) { $product_id = $thepostid; } elseif (is_object($post) && ! empty($post->ID)) { $product_id = $post->ID; } elseif (isset($_POST['post_id'])) { $product_id = absint($_POST['post_id']); }
+
+		if (! empty($thepostid)) {
+			$product_id = $thepostid;
+		} elseif (is_object($post) && ! empty($post->ID)) {
+			$product_id = $post->ID;
+		} elseif (isset($_POST['post_id'])) {
+			$product_id = absint($_POST['post_id']);
+		}
+
 		$attribute_slug = sanitize_title($attribute->get_name());
+
 		if ($product_id) {
 			$card_attributes = get_post_meta($product_id, '_dd_card_attributes', true);
-			if (! is_array($card_attributes)) { $card_attributes = []; }
+			if (! is_array($card_attributes)) {
+				$card_attributes = [];
+			}
 			$is_card = in_array($attribute_slug, $card_attributes, true);
 		}
 ?>
@@ -252,45 +341,86 @@ class DD_WooCommerce_Customizer
 	<?php
 	}
 
+	/**
+	 * Process and save the custom card layout configuration upon product update.
+	 *
+	 * @since 1.2.2
+	 * @param WC_Product $product The WooCommerce product object currently being saved.
+	 * @return void
+	 */
 	public function save_card_layout_configuration($product)
 	{
 		$post_data = $_POST;
 		$is_ajax   = false;
+
 		if (isset($_POST['action']) && 'woocommerce_save_attributes' === $_POST['action'] && isset($_POST['data'])) {
 			parse_str(wp_unslash($_POST['data']), $post_data);
 			$is_ajax = true;
 		}
-		if (! isset($post_data['woocommerce_meta_nonce']) && ! $is_ajax) { return; }
+
+		if (! isset($post_data['woocommerce_meta_nonce']) && ! $is_ajax) {
+			return;
+		}
+
 		$attribute_is_card = isset($post_data['attribute_is_card']) ? wc_clean(wp_unslash($post_data['attribute_is_card'])) : [];
 		$card_attributes   = [];
+
 		if (is_array($attribute_is_card)) {
 			foreach ($attribute_is_card as $slug => $value) {
-				if (! empty($value)) { $card_attributes[] = sanitize_title($slug); }
+				if (! empty($value)) {
+					$card_attributes[] = sanitize_title($slug);
+				}
 			}
 		}
+
 		$product->update_meta_data('_dd_card_attributes', $card_attributes);
 	}
 
+	/**
+	 * Transform default variation dropdowns into interactive cards.
+	 *
+	 * @since 1.2.0
+	 * @param string $html Original HTML of the select dropdown.
+	 * @param array  $args Arguments passed to the variation dropdown.
+	 * @return string
+	 */
 	public function render_custom_variation_cards($html, $args)
 	{
-		if (taxonomy_exists($args['attribute'])) { return $html; }
+		if (taxonomy_exists($args['attribute'])) {
+			return $html;
+		}
+
 		$product = $args['product'];
-		if (! $product) { return $html; }
+
+		if (! $product) {
+			return $html;
+		}
+
 		$card_attributes = get_post_meta($product->get_id(), '_dd_card_attributes', true);
-		if (! is_array($card_attributes)) { $card_attributes = []; }
+		if (! is_array($card_attributes)) {
+			$card_attributes = [];
+		}
+
 		$sanitized_card_attributes = array_map('sanitize_title', $card_attributes);
 		$attribute_slug            = sanitize_title($args['attribute']);
-		if (! in_array($attribute_slug, $sanitized_card_attributes, true)) { return $html; }
 
-		$options = $args['options'];
+		if (! in_array($attribute_slug, $sanitized_card_attributes, true)) {
+			return $html;
+		}
+
+		$options   = $args['options'];
 		$attribute = $args['attribute'];
-		$name = $args['name'] ? $args['name'] : 'attribute_' . sanitize_title($attribute);
-		$id = $args['id'] ? $args['id'] : sanitize_title($attribute);
-		$class = $args['class'];
-		if (empty($options)) { return $html; }
+		$name      = $args['name'] ? $args['name'] : 'attribute_' . sanitize_title($attribute);
+		$id        = $args['id'] ? $args['id'] : sanitize_title($attribute);
+		$class     = $args['class'];
+
+		if (empty($options)) {
+			return $html;
+		}
 
 		$custom_html  = '<select id="' . esc_attr($id) . '" class="' . esc_attr($class) . ' dd-hidden-variation-select" name="' . esc_attr($name) . '" data-attribute_name="attribute_' . esc_attr(sanitize_title($attribute)) . '" style="display:none;">';
 		$custom_html .= '<option value="">' . esc_html__('Choose an option', 'woocommerce') . '</option>';
+
 		foreach ($options as $option) {
 			$selected = sanitize_title($args['selected']) === $args['selected'] ? selected($args['selected'], sanitize_title($option), false) : selected($args['selected'], $option, false);
 			$custom_html .= '<option value="' . esc_attr($option) . '" ' . $selected . '>' . esc_html(apply_filters('woocommerce_variation_option_name', $option, null, $attribute, $product)) . '</option>';
@@ -298,12 +428,14 @@ class DD_WooCommerce_Customizer
 		$custom_html .= '</select>';
 
 		$custom_html .= '<div class="dd-custom-variations-grid" data-select-id="' . esc_attr($id) . '">';
+
 		$available_variations = $product->get_available_variations();
 
 		foreach ($options as $option) {
 			$option_val  = esc_attr($option);
 			$option_name = esc_html(apply_filters('woocommerce_variation_option_name', $option, null, $attribute, $product));
 			$image_html  = '';
+
 			$attr_key = 'attribute_' . sanitize_title($attribute);
 			foreach ($available_variations as $variation) {
 				if (isset($variation['attributes'][$attr_key]) && $variation['attributes'][$attr_key] === $option) {
@@ -313,20 +445,90 @@ class DD_WooCommerce_Customizer
 					}
 				}
 			}
+
 			$is_selected = ($args['selected'] === $option || sanitize_title($args['selected']) === sanitize_title($option)) ? ' selected' : '';
+
 			$custom_html .= '<div class="dd-variation-card' . $is_selected . '" data-value="' . $option_val . '">';
-			if ($image_html) { $custom_html .= '<div class="dd-variation-card-img">' . $image_html . '</div>'; }
+			if ($image_html) {
+				$custom_html .= '<div class="dd-variation-card-img">' . $image_html . '</div>';
+			}
 			$custom_html .= '<div class="dd-variation-card-title">' . $option_name . '</div>';
 			$custom_html .= '</div>';
 		}
+
 		$custom_html .= '</div>';
+
 		return $custom_html;
 	}
 
+	/**
+	 * Inject necessary JavaScript logic and CSS styling for the interactive variations.
+	 *
+	 * @since 1.1.1
+	 * @return void
+	 */
 	public function inject_variation_ui_assets()
 	{
-		if (! is_product()) { return; }
+		if (! is_product()) {
+			return;
+		}
 	?>
+		<style>
+			.dd-custom-variations-grid {
+				display: flex;
+				flex-direction: column;
+				gap: 12px;
+			}
+
+			.dd-variation-card {
+				display: flex;
+				align-items: center;
+				padding: 12px 16px;
+				border: 1px solid #e2e8f0;
+				border-radius: 8px;
+				background: #f8fafc;
+				cursor: pointer;
+				transition: all 0.2s ease-in-out;
+			}
+
+			.dd-variation-card:not(.disabled):not(.selected):hover {
+				border-color: #cbd5e1;
+				background: #f1f5f9;
+			}
+
+			.dd-variation-card.selected {
+				border-color: #ef4444;
+				background: #ffffff;
+			}
+
+			.dd-variation-card.disabled {
+				opacity: 0.4;
+				cursor: not-allowed;
+				background: #e2e8f0;
+				border-color: #cbd5e1;
+				filter: grayscale(100%);
+			}
+
+			.dd-variation-card-img {
+				width: 60px;
+				height: 60px;
+				margin-right: 16px;
+				flex-shrink: 0;
+			}
+
+			.dd-variation-card-img img {
+				width: 100%;
+				height: 100%;
+				object-fit: contain;
+			}
+
+			.dd-variation-card-title {
+				font-size: 15px;
+				font-weight: 500;
+				color: var(--contrast);
+			}
+		</style>
+
 		<script type="text/javascript">
 			jQuery(document).ready(function($) {
 				function syncCustomVariationsState() {
@@ -344,13 +546,20 @@ class DD_WooCommerce_Customizer
 								$card.addClass('disabled').removeClass('selected');
 							} else {
 								$card.removeClass('disabled');
-								if (cardVal === currentVal && currentVal !== '') { $card.addClass('selected'); } 
-								else { $card.removeClass('selected'); }
+								if (cardVal === currentVal && currentVal !== '') {
+									$card.addClass('selected');
+								} else {
+									$card.removeClass('selected');
+								}
 							}
 						});
 					});
 				}
-				$('.variations_form').on('woocommerce_update_variation_values reset_data', function() { setTimeout(syncCustomVariationsState, 50); });
+
+				$('.variations_form').on('woocommerce_update_variation_values reset_data', function() {
+					setTimeout(syncCustomVariationsState, 50);
+				});
+
 				$(document).on('click', '.dd-variation-card:not(.disabled)', function() {
 					var $card = $(this);
 					var $grid = $card.closest('.dd-custom-variations-grid');
@@ -372,19 +581,46 @@ class DD_WooCommerce_Customizer
 	<?php
 	}
 
+	/**
+	 * Registers custom tabs within the WooCommerce Product Data meta box.
+	 *
+	 * @since 1.3.0
+	 * @param array $tabs Existing product data tabs.
+	 * @return array
+	 */
 	public function add_custom_product_data_tabs($tabs)
 	{
-		$tabs['dd_features'] = ['label' => __('Features', 'dd-woo-customizer'), 'target' => 'dd_features_product_data', 'class' => ['show_if_simple', 'show_if_variable'], 'priority' => 70];
-		$tabs['dd_downloads'] = ['label' => __('Downloads', 'dd-woo-customizer'), 'target' => 'dd_downloads_product_data', 'class' => ['show_if_simple', 'show_if_variable'], 'priority' => 71];
+		$tabs['dd_features'] = [
+			'label'    => __('Features', 'dd-woo-customizer'),
+			'target'   => 'dd_features_product_data',
+			'class'    => ['show_if_simple', 'show_if_variable'],
+			'priority' => 70,
+		];
+
+		$tabs['dd_downloads'] = [
+			'label'    => __('Downloads', 'dd-woo-customizer'),
+			'target'   => 'dd_downloads_product_data',
+			'class'    => ['show_if_simple', 'show_if_variable'],
+			'priority' => 71,
+		];
+
 		return $tabs;
 	}
 
+	/**
+	 * Outputs the HTML structures for the custom product data panels.
+	 *
+	 * @since 1.3.0
+	 * @return void
+	 */
 	public function add_custom_product_data_panels()
 	{
 		global $post;
+
 		echo '<div id="dd_features_product_data" class="panel woocommerce_options_panel hidden">';
 		echo '<div class="options_group" style="padding: 10px 20px;">';
 		echo '<p><strong>' . esc_html__('Product Features', 'dd-woo-customizer') . '</strong></p>';
+
 		$features_content = get_post_meta($post->ID, '_dd_product_features', true);
 		wp_editor($features_content, 'dd_product_features', ['textarea_name' => '_dd_product_features', 'media_buttons' => true, 'textarea_rows' => 10]);
 		echo '</div></div>';
@@ -392,9 +628,58 @@ class DD_WooCommerce_Customizer
 		echo '<div id="dd_downloads_product_data" class="panel woocommerce_options_panel hidden">';
 		echo '<div class="options_group" style="padding: 10px 20px;">';
 		$downloads_data = get_post_meta($post->ID, '_dd_product_downloads', true);
-		if (! is_array($downloads_data)) { $downloads_data = []; }
+		if (! is_array($downloads_data)) {
+			$downloads_data = [];
+		}
 	?>
 		<div class="dd-repeater-wrapper">
+			<style>
+				.dd-repeater-row {
+					border: 1px solid #dfdfdf;
+					background: #f9f9f9;
+					margin-bottom: 10px;
+					border-radius: 3px;
+				}
+
+				.dd-repeater-header {
+					padding: 10px;
+					background: #eee;
+					cursor: move;
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+					border-bottom: 1px solid #dfdfdf;
+				}
+
+				.dd-repeater-header h4 {
+					margin: 0;
+					font-size: 13px;
+				}
+
+				.dd-repeater-actions {
+					display: flex;
+					gap: 8px;
+				}
+
+				.dd-repeater-actions a {
+					text-decoration: none;
+					cursor: pointer;
+					color: #555;
+				}
+
+				.dd-repeater-actions a:hover {
+					color: #0073aa;
+				}
+
+				.dd-repeater-content {
+					padding: 15px;
+					background: #fff;
+				}
+
+				.dd-repeater-row.collapsed .dd-repeater-content {
+					display: none;
+				}
+			</style>
 			<div id="dd-downloads-container">
 				<?php
 				if (! empty($downloads_data)) {
@@ -410,19 +695,24 @@ class DD_WooCommerce_Customizer
 		echo '</div></div>';
 	}
 
+	/**
+	 * Helper method to render a single repeater row.
+	 *
+	 * @since 1.3.0
+	 */
 	private function render_repeater_row($index, $title = '', $url = '')
 	{
 	?>
-		<div class="dd-repeater-row" style="border: 1px solid #dfdfdf; background: #f9f9f9; margin-bottom: 10px; border-radius: 3px;">
-			<div class="dd-repeater-header" style="padding: 10px; background: #eee; cursor: move; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dfdfdf;">
-				<h4 class="row-title" style="margin: 0; font-size: 13px;"><?php echo esc_html($title ? $title : __('New Download', 'dd-woo-customizer')); ?></h4>
-				<div class="dd-repeater-actions" style="display: flex; gap: 8px;">
-					<a class="dd-toggle-row" title="Collapse/Expand" style="text-decoration: none; cursor: pointer; color: #555;"><span class="dashicons dashicons-arrow-up-alt2"></span></a>
-					<a class="dd-duplicate-row" title="Duplicate" style="text-decoration: none; cursor: pointer; color: #555;"><span class="dashicons dashicons-admin-page"></span></a>
-					<a class="dd-delete-row" title="Delete" style="text-decoration: none; cursor: pointer; color: #555;"><span class="dashicons dashicons-trash"></span></a>
+		<div class="dd-repeater-row">
+			<div class="dd-repeater-header">
+				<h4 class="row-title"><?php echo esc_html($title ? $title : __('New Download', 'dd-woo-customizer')); ?></h4>
+				<div class="dd-repeater-actions">
+					<a class="dd-toggle-row" title="Collapse/Expand"><span class="dashicons dashicons-arrow-up-alt2"></span></a>
+					<a class="dd-duplicate-row" title="Duplicate"><span class="dashicons dashicons-admin-page"></span></a>
+					<a class="dd-delete-row" title="Delete"><span class="dashicons dashicons-trash"></span></a>
 				</div>
 			</div>
-			<div class="dd-repeater-content" style="padding: 15px; background: #fff;">
+			<div class="dd-repeater-content">
 				<p class="form-field">
 					<label><?php esc_html_e('Title', 'dd-woo-customizer'); ?></label>
 					<input type="text" class="dd-row-title-input short" name="_dd_product_downloads[<?php echo esc_attr($index); ?>][title]" value="<?php echo esc_attr($title); ?>" />
@@ -437,9 +727,16 @@ class DD_WooCommerce_Customizer
 	<?php
 	}
 
+	/**
+	 * Enqueues scripts for the admin panel.
+	 *
+	 * @since 1.3.0
+	 */
 	public function enqueue_admin_scripts($hook)
 	{
-		if (! in_array($hook, ['post.php', 'post-new.php'], true)) { return; }
+		if (! in_array($hook, ['post.php', 'post-new.php'], true)) {
+			return;
+		}
 		wp_enqueue_media();
 		wp_enqueue_script('jquery-ui-sortable');
 		ob_start();
@@ -474,7 +771,7 @@ class DD_WooCommerce_Customizer
 				e.preventDefault();
 				const currentRow = $(this).closest('.dd-repeater-row');
 				const clone = currentRow.clone();
-				clone.find('.dd-repeater-content').show();
+				clone.removeClass('collapsed');
 				clone.find('.dashicons-arrow-down-alt2').removeClass('dashicons-arrow-down-alt2').addClass('dashicons-arrow-up-alt2');
 				currentRow.after(clone);
 				rowCount++;
@@ -483,12 +780,10 @@ class DD_WooCommerce_Customizer
 			container.on('click', '.dd-toggle-row', function(e) {
 				e.preventDefault();
 				const row = $(this).closest('.dd-repeater-row');
-				const content = row.find('.dd-repeater-content');
 				const icon = $(this).find('.dashicons');
-				content.slideToggle(200, function() {
-					if (content.is(':visible')) { icon.removeClass('dashicons-arrow-down-alt2').addClass('dashicons-arrow-up-alt2'); }
-					else { icon.removeClass('dashicons-arrow-up-alt2').addClass('dashicons-arrow-down-alt2'); }
-				});
+				row.toggleClass('collapsed');
+				if (row.hasClass('collapsed')) { icon.removeClass('dashicons-arrow-up-alt2').addClass('dashicons-arrow-down-alt2'); }
+				else { icon.removeClass('dashicons-arrow-down-alt2').addClass('dashicons-arrow-up-alt2'); }
 			});
 			container.on('input', '.dd-row-title-input', function() { $(this).closest('.dd-repeater-row').find('.row-title').text($(this).val() || 'New Download'); });
 			container.on('click', '.dd-upload-file-btn', function(e) {
@@ -502,6 +797,11 @@ class DD_WooCommerce_Customizer
 		wp_add_inline_script('jquery-ui-sortable', $custom_js);
 	}
 
+	/**
+	 * Sanitizes and persists custom product meta fields.
+	 *
+	 * @since 1.3.0
+	 */
 	public function save_custom_product_meta_data($post_id)
 	{
 		if (isset($_POST['_dd_product_features'])) {
@@ -511,7 +811,10 @@ class DD_WooCommerce_Customizer
 			$sanitized_downloads = [];
 			foreach ($_POST['_dd_product_downloads'] as $download) {
 				if (! empty($download['title']) || ! empty($download['url'])) {
-					$sanitized_downloads[] = ['title' => sanitize_text_field(wp_unslash($download['title'])), 'url' => esc_url_raw(wp_unslash($download['url']))];
+					$sanitized_downloads[] = [
+						'title' => sanitize_text_field(wp_unslash($download['title'])),
+						'url'   => esc_url_raw(wp_unslash($download['url'])),
+					];
 				}
 			}
 			update_post_meta($post_id, '_dd_product_downloads', $sanitized_downloads);
@@ -520,18 +823,39 @@ class DD_WooCommerce_Customizer
 		}
 	}
 
+	/**
+	 * Registers custom tabs on the WooCommerce Single Product frontend view.
+	 *
+	 * @since 1.3.0
+	 * @param array $tabs Current frontend tabs.
+	 * @return array
+	 */
 	public function add_frontend_product_tabs($tabs)
 	{
 		global $post;
 		$features_content = get_post_meta($post->ID, '_dd_product_features', true);
-		if (! empty($features_content)) { $tabs['dd_features_tab'] = ['title' => __('Features', 'dd-woo-customizer'), 'priority' => 25, 'callback' => [$this, 'render_features_tab_content']]; }
+		if (! empty($features_content)) {
+			$tabs['dd_features_tab'] = ['title' => __('Features', 'dd-woo-customizer'), 'priority' => 25, 'callback' => [$this, 'render_features_tab_content']];
+		}
 		$downloads_data = get_post_meta($post->ID, '_dd_product_downloads', true);
-		if (! empty($downloads_data)) { $tabs['dd_downloads_tab'] = ['title' => __('Downloads', 'dd-woo-customizer'), 'priority' => 30, 'callback' => [$this, 'render_downloads_tab_content']]; }
+		if (! empty($downloads_data)) {
+			$tabs['dd_downloads_tab'] = ['title' => __('Downloads', 'dd-woo-customizer'), 'priority' => 30, 'callback' => [$this, 'render_downloads_tab_content']];
+		}
 		return $tabs;
 	}
 
-	public function render_features_tab_content() { global $post; echo apply_filters('the_content', get_post_meta($post->ID, '_dd_product_features', true)); }
+	/**
+	 * Callback for Features WYSIWYG content.
+	 */
+	public function render_features_tab_content()
+	{
+		global $post;
+		echo apply_filters('the_content', get_post_meta($post->ID, '_dd_product_features', true));
+	}
 
+	/**
+	 * Callback for Downloads repeater data.
+	 */
 	public function render_downloads_tab_content()
 	{
 		global $post;
@@ -542,14 +866,30 @@ class DD_WooCommerce_Customizer
 			$url   = esc_url($download['url']);
 			if (! $title && ! $url) continue;
 			echo '<div class="dd-download-card"><h4>' . $title . '</h4>';
-			if ($url) { echo '<a href="' . $url . '" class="dd-download-btn" target="_blank" rel="noopener noreferrer">' . esc_html__('Download', 'dd-woo-customizer') . '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></a>'; }
+			if ($url) {
+				echo '<a href="' . $url . '" class="dd-download-btn" target="_blank" rel="noopener noreferrer">' . esc_html__('Download', 'dd-woo-customizer') . '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></a>';
+			}
 			echo '</div>';
 		}
 		echo '</div>';
 	}
 
-	public function modify_breadcrumb_delimiter($defaults) { $defaults['delimiter'] = ' <span class="sep">❯</span> '; return $defaults; }
+	/**
+	 * Modifies the default WooCommerce breadcrumb arguments.
+	 *
+	 * @since 1.4.0
+	 */
+	public function modify_breadcrumb_delimiter($defaults)
+	{
+		$defaults['delimiter'] = ' <span class="sep">❯</span> ';
+		return $defaults;
+	}
 
+	/**
+	 * Disables core WooCommerce review and rating functionalities.
+	 *
+	 * @since 1.5.0
+	 */
 	public function disable_woocommerce_reviews()
 	{
 		remove_post_type_support('product', 'comments');
@@ -557,9 +897,32 @@ class DD_WooCommerce_Customizer
 		remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_rating', 10);
 	}
 
-	public function remove_reviews_tab($tabs) { if (isset($tabs['reviews'])) { unset($tabs['reviews']); } return $tabs; }
-	public function force_close_product_comments($open, $post_id) { return (get_post_type($post_id) === 'product') ? false : $open; }
+	/**
+	 * Intercepts the product tabs to unset the reviews tab.
+	 */
+	public function remove_reviews_tab($tabs)
+	{
+		if (isset($tabs['reviews'])) {
+			unset($tabs['reviews']);
+		}
+		return $tabs;
+	}
 
+	/**
+	 * Explicitly force a 'closed' state for product comments.
+	 */
+	public function force_close_product_comments($open, $post_id)
+	{
+		return (get_post_type($post_id) === 'product') ? false : $open;
+	}
+
+	/**
+	 * Reorders the single product page output to place "You May Also Like" (Upsells) 
+	 * after "Related Products".
+	 *
+	 * @since 1.6.0
+	 * @return void
+	 */
 	public function reorder_upsells_and_related_products()
 	{
 		remove_action('woocommerce_after_single_product_summary', 'woocommerce_upsell_display', 15);
@@ -568,6 +931,7 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Renders the unified Frequently Bought Together checkboxes directly inside the main cart form.
+	 * Resolves HTML nesting conflicts and allows bulk execution alongside the primary variable product.
 	 *
 	 * @since 1.9.0
 	 * @return void
@@ -606,7 +970,7 @@ class DD_WooCommerce_Customizer
 
 				// Output unified checkbox row
 				echo '<div class="dd-fbt-item">';
-				
+
 				// Checkbox toggle
 				echo '<label class="dd-fbt-checkbox-wrapper">';
 				echo '<input type="checkbox" class="dd-fbt-checkbox" value="' . absint($cross_sell->get_id()) . '" data-title="' . esc_attr($title) . '" />';
@@ -616,10 +980,10 @@ class DD_WooCommerce_Customizer
 				// Main visual area (Image, Title, Quantity Increments)
 				echo '<div class="dd-fbt-main">';
 				echo wp_kses_post($image);
-				
+
 				echo '<div class="dd-fbt-details">';
 				echo '<span class="dd-fbt-title">' . esc_html($title) . '</span>';
-				
+
 				// Custom inline quantity selector for FBT elements
 				echo '<div class="dd-fbt-qty">';
 				echo '<button type="button" class="dd-qty-btn dd-qty-minus">-</button>';
@@ -645,7 +1009,7 @@ class DD_WooCommerce_Customizer
 
 		// Dynamically inject Enquire Now button logic based on custom Meta Flag
 		$is_enquire_only = get_post_meta($product->get_id(), '_dd_enquire_only', true) === 'yes';
-		
+
 		if ($is_enquire_only) {
 			// Output our custom trigger button that mimics the native add to cart styling
 			echo '<button type="button" class="dd-enquire-btn button alt">' . esc_html__('ENQUIRE NOW', 'dd-woo-customizer') . '</button>';
@@ -678,7 +1042,9 @@ class DD_WooCommerce_Customizer
 				$(document).on('click', '.dd-qty-minus', function() {
 					var $input = $(this).siblings('.dd-fbt-qty-input');
 					var val = parseInt($input.val());
-					if (val > 1) { $input.val(val - 1); }
+					if (val > 1) {
+						$input.val(val - 1);
+					}
 				});
 
 				$(document).on('change', '.dd-fbt-checkbox', function() {
@@ -716,7 +1082,10 @@ class DD_WooCommerce_Customizer
 					$('.dd-fbt-checkbox:checked').each(function() {
 						var pid = $(this).val();
 						var qty = $(this).closest('.dd-fbt-item').find('.dd-fbt-qty-input').val();
-						fbtItems.push({ id: pid, qty: qty });
+						fbtItems.push({
+							id: pid,
+							qty: qty
+						});
 					});
 					formData.append('fbt_items', JSON.stringify(fbtItems));
 
@@ -732,10 +1101,12 @@ class DD_WooCommerce_Customizer
 							if (response && response.fragments) {
 								$(document.body).trigger('added_to_cart', [response.fragments, response.cart_hash, $btn]);
 								$btn.removeClass('loading wc-loading');
-								
+
 								var originalText = $btn.html();
 								$btn.html('Added to cart!');
-								setTimeout(function() { $btn.html(originalText); }, 3000);
+								setTimeout(function() {
+									$btn.html(originalText);
+								}, 3000);
 
 							} else if (response && response.success === false) {
 								$btn.removeClass('loading wc-loading');
@@ -757,13 +1128,13 @@ class DD_WooCommerce_Customizer
 
 					// 1. Capture Contextual Data Strings
 					var mainTitle = $('h1.product_title').text().trim();
-					var mainQty   = $('form.cart .quantity input.qty').val() || 1;
-					
+					var mainQty = $('form.cart .quantity input.qty').val() || 1;
+
 					var productsText = mainTitle + " - Qty: " + mainQty + "\n";
 
 					$('.dd-fbt-checkbox:checked').each(function() {
 						var title = $(this).data('title');
-						var qty   = $(this).closest('.dd-fbt-item').find('.dd-fbt-qty-input').val();
+						var qty = $(this).closest('.dd-fbt-item').find('.dd-fbt-qty-input').val();
 						productsText += title + " - Qty: " + qty + "\n";
 					});
 
@@ -775,7 +1146,7 @@ class DD_WooCommerce_Customizer
 
 					// 3. Trigger GP Slideout Execution
 					var $slideoutToggleLink = $('.slideout-toggle a');
-					var $slideoutToggleObj  = $('.slideout-toggle');
+					var $slideoutToggleObj = $('.slideout-toggle');
 
 					if ($slideoutToggleLink.length > 0) {
 						$slideoutToggleLink[0].click(); // Mimic exact native mouse click logic

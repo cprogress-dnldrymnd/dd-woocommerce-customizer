@@ -245,6 +245,7 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Enqueue the plugin's custom stylesheet and inline assets.
+	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
 	 *
 	 * @since 1.11.0
 	 * @return void
@@ -260,6 +261,7 @@ class DD_WooCommerce_Customizer
 				'all'
 			);
 
+			// Inline styles mapping the bespoke unified variation selections and FBT components
 			$custom_css = "
 				.dd-downloads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
 				.dd-download-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: flex-start; background: #f8fafc; transition: all 0.2s ease-in-out; }
@@ -269,6 +271,13 @@ class DD_WooCommerce_Customizer
 				.dd-download-btn:hover { background: var(--contrast); color: var(--base-3); }
 				.dd-download-btn svg { width: 16px; height: 16px; margin-left: 8px; fill: currentColor; }
 				.upsells.products { margin-top: 4em; } 
+
+				/* Native WooCommerce Variation Price & Clear Overrides */
+				.woocommerce-variation.single_variation { padding: 15px 20px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px; display: flex; flex-direction: column; align-items: flex-start; }
+				.woocommerce-variation-price { margin-bottom: 10px; width: 100%; }
+				.woocommerce-variation-price .price { font-size: 1.6rem; font-weight: 700; color: var(--contrast); margin: 0; }
+				.reset_variations { display: inline-block; color: var(--accent) !important; font-size: 0.85rem; font-weight: 600; text-decoration: underline; margin-top: 5px; transition: opacity 0.2s; }
+				.reset_variations:hover { opacity: 0.7; }
 				
 				/* FBT Unified Modern Layout Customization */
 				.dd-fbt-wrapper { margin-bottom: 25px; }
@@ -309,6 +318,11 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-attribute-row { margin-bottom: 8px; width: 100%; display: flex; align-items: center; gap: 0.5rem }
 				.dd-fbt-attribute-row label { display: block; font-size: 0.8rem; font-weight: 600; color: #000; margin-bottom: 4px; white-space: nowrap}
 				.dd-fbt-variation-select.dd-fbt-variation-select { min-height: unset; width: 100%; max-width: 100%; font-size: 0.85rem; padding: 6px 8px; border-radius: 4px; border: 1px solid #cbd5e1; background: #f8fafc; }
+
+				/* Grand Total Floating Display */
+				.dd-grand-total-wrap { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #f8fafc; border: 2px solid var(--accent); border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+				.dd-grand-total-label { font-size: 1.1rem; font-weight: 600; color: var(--contrast); }
+				.dd-grand-total-value { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
 
 				/* Enquire Now Button overriding to match GP schema as an <a> tag */
 				.dd-enquire-btn { order: 3; width: auto; flex-grow: 1; display: block; text-align: center; box-sizing: border-box; text-decoration: none; background: var(--accent) !important; color: #fff !important; border-radius: 4px; font-weight: 600; padding: 15px !important; border: none; cursor: pointer; transition: opacity 0.2s; }
@@ -405,7 +419,7 @@ class DD_WooCommerce_Customizer
 	/**
 	 * Transform default variation dropdowns into interactive cards.
 	 *
-	 * @since 1.11.0 Updated to accurately inject pricing to the right side of the card.
+	 * @since 1.11.0 Updated to securely parse and render individual variation prices.
 	 */
 	public function render_custom_variation_cards($html, $args)
 	{
@@ -458,9 +472,11 @@ class DD_WooCommerce_Customizer
 			$option_val  = esc_attr($option);
 			$option_name = esc_html(apply_filters('woocommerce_variation_option_name', $option, null, $attribute, $product));
 			$image_html  = '';
-			$price_html  = '';
+			$price_html  = ''; // Initialize dynamic price string
 
 			$attr_key = 'attribute_' . sanitize_title($attribute);
+			
+			// Resolve associated images and prices specific to this attribute option
 			foreach ($available_variations as $variation) {
 				if (isset($variation['attributes'][$attr_key]) && $variation['attributes'][$attr_key] === $option) {
 					if (! empty($variation['image']['thumb_src'])) {
@@ -469,7 +485,7 @@ class DD_WooCommerce_Customizer
 					if (! empty($variation['price_html'])) {
 						$price_html = wp_kses_post($variation['price_html']);
 					}
-					break; // Break on first match; JavaScript handles dynamic updating
+					break; // Found the matching variation, halt processing for this loop
 				}
 			}
 
@@ -479,9 +495,10 @@ class DD_WooCommerce_Customizer
 			if ($image_html) {
 				$custom_html .= '<div class="dd-variation-card-img">' . $image_html . '</div>';
 			}
+			// Encapsulate textual details securely
 			$custom_html .= '<div class="dd-variation-card-details">';
 			$custom_html .= '<div class="dd-variation-card-title">' . $option_name . '</div>';
-			$custom_html .= '</div>';
+			$custom_html .= '</div>'; // End details block
 			if ($price_html) {
 				$custom_html .= '<div class="dd-variation-card-price">' . $price_html . '</div>';
 			}
@@ -1027,7 +1044,7 @@ class DD_WooCommerce_Customizer
 	 * Now injects dynamic variation dropdowns for Parent Variable products, explicitly disabling 
 	 * the custom variation card layouts for these nested FBT items to force native dropdowns.
 	 *
-	 * @since 1.10.1
+	 * @since 1.11.0
 	 * @return void
 	 */
 	public function display_frequently_bought_together_and_enquire_btn()
@@ -1135,6 +1152,12 @@ class DD_WooCommerce_Customizer
 			echo '</div>'; // close wrapper
 		}
 
+		// Inject Dynamic Grand Total Element
+		echo '<div class="dd-grand-total-wrap" style="display:none;">';
+		echo '<span class="dd-grand-total-label">' . esc_html__('Total Amount:', 'dd-woo-customizer') . '</span>';
+		echo '<span class="dd-grand-total-value"></span>';
+		echo '</div>';
+
 		// Dynamically inject Enquire Now button logic based on custom Meta Flag
 		$is_enquire_only = get_post_meta($product->get_id(), '_dd_enquire_only', true) === 'yes';
 		
@@ -1154,7 +1177,7 @@ class DD_WooCommerce_Customizer
 	 * native DOM event dispatching to forcefully update WooCommerce Gutenberg cart blocks,
 	 * advanced dynamic variation string extraction, and complex price tracking for Enquiries.
 	 *
-	 * @since 1.10.4
+	 * @since 1.11.0
 	 * @return void
 	 */
 	public function inject_ajax_add_to_cart_scripts()
@@ -1170,11 +1193,62 @@ class DD_WooCommerce_Customizer
 			jQuery(document).ready(function($) {
 
 				var globalTargetFieldSelector = <?php echo wp_json_encode($target_field); ?>;
+				var currencySymbol = "£";
+
+				// Helper function to safely extract raw number and currency string from HTML
+				function parsePriceElement($el) {
+					if (!$el || $el.length === 0) return 0;
+					var text = $el.text().trim();
+					if (!text) return 0;
+					
+					// Attempt to extract the currency symbol
+					var match = text.match(/[^\d.,\s]+/);
+					if (match) currencySymbol = match[0];
+
+					// Clean number mapping
+					var numStr = text.replace(/,/g, '').replace(/[^\d.]/g, '');
+					var val = parseFloat(numStr);
+					return isNaN(val) ? 0 : val;
+				}
+
+				// Recalculates the Global "Total Amount" displayed directly on the DOM
+				function calculateGrandTotal() {
+					var totalPrice = 0;
+
+					// 1. Main Product
+					var mainQty = parseInt($('form.cart .quantity input.qty').val()) || 1;
+					// Target the active variation price if variable, otherwise fallback to simple price
+					var $mainPriceEl = $('.woocommerce-variation-price .woocommerce-Price-amount').last();
+					if ($mainPriceEl.length === 0 || !$mainPriceEl.is(':visible')) {
+						$mainPriceEl = $('.summary > .price .woocommerce-Price-amount').last();
+					}
+					totalPrice += (parsePriceElement($mainPriceEl) * mainQty);
+
+					// 2. FBT Items
+					$('.dd-fbt-checkbox:checked').each(function() {
+						var $item = $(this).closest('.dd-fbt-item');
+						var qty = parseInt($item.find('.dd-fbt-qty-input').val()) || 1;
+						var $fbtPriceEl = $item.find('.dd-fbt-price .woocommerce-Price-amount').last();
+						totalPrice += (parsePriceElement($fbtPriceEl) * qty);
+					});
+
+					// 3. Update the DOM Wrapper
+					var $totalWrap = $('.dd-grand-total-wrap');
+					if ($totalWrap.length > 0) {
+						if (totalPrice > 0) {
+							$totalWrap.find('.dd-grand-total-value').text(currencySymbol + totalPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+							$totalWrap.slideDown(200);
+						} else {
+							$totalWrap.slideUp(200);
+						}
+					}
+				}
 
 				// UI Logics for FBT Checkboxes and Quantity Increments
 				$(document).on('click', '.dd-qty-plus', function() {
 					var $input = $(this).siblings('.dd-fbt-qty-input');
 					$input.val(parseInt($input.val()) + 1);
+					setTimeout(calculateGrandTotal, 50);
 				});
 
 				$(document).on('click', '.dd-qty-minus', function() {
@@ -1183,6 +1257,7 @@ class DD_WooCommerce_Customizer
 					if (val > 1) {
 						$input.val(val - 1);
 					}
+					setTimeout(calculateGrandTotal, 50);
 				});
 
 				// Initialize disabled states for FBT controls on page load
@@ -1202,6 +1277,7 @@ class DD_WooCommerce_Customizer
 						$item.removeClass('is-selected');
 						$item.find('.dd-qty-btn, .dd-fbt-variation-select').prop('disabled', true);
 					}
+					calculateGrandTotal();
 				});
 
 				// FBT Dynamic Variation Matcher for Parent Variable cross-sells
@@ -1224,6 +1300,7 @@ class DD_WooCommerce_Customizer
 					// Reset matching states if not all dropdowns are satisfied
 					if (!allSelected) {
 						$optionsContainer.find('.dd-fbt-variation-id').val('');
+						calculateGrandTotal();
 						return; 
 					}
 
@@ -1249,10 +1326,22 @@ class DD_WooCommerce_Customizer
 					} else {
 						$optionsContainer.find('.dd-fbt-variation-id').val('');
 					}
+					
+					// Update pricing matrix once DOM elements are populated
+					setTimeout(calculateGrandTotal, 100);
 				});
 
 				// Pre-initialize variation matchers in case variables load with specific default selections
 				$('.dd-fbt-variation-select').trigger('change');
+
+				// Bind main product variation interactions directly into the Grand Total calculator
+				$(document).on('change input', 'form.cart .quantity input.qty', calculateGrandTotal);
+				$('.variations_form').on('show_variation hide_variation reset_data', function() {
+					setTimeout(calculateGrandTotal, 100);
+				});
+				
+				// Execute initial total check purely on component load
+				setTimeout(calculateGrandTotal, 500);
 
 				// Unified Cart Submission Interceptor
 				$(document).on('submit', 'form.cart', function(e) {
@@ -1360,25 +1449,11 @@ class DD_WooCommerce_Customizer
 				$(document).on('click', '.dd-enquire-btn', function(e) {
 					var itemIndex = 1;
 					var productsText = "";
-					var totalPrice = 0;
-					var currencySymbol = "£";
-
-					// Helper function to safely extract raw number and currency string from HTML
-					function parsePriceElement($el) {
-						if (!$el || $el.length === 0) return { text: "", val: 0 };
-						var text = $el.text().trim();
-						if (!text) return { text: "", val: 0 };
-						
-						// Attempt to extract the currency symbol
-						var match = text.match(/[^\d.,\s]+/);
-						if (match) currencySymbol = match[0];
-
-						// Clean number mapping
-						var numStr = text.replace(/,/g, '').replace(/[^\d.]/g, '');
-						var val = parseFloat(numStr);
-						if (isNaN(val)) val = 0;
-						
-						return { text: text, val: val };
+					
+					// Function dependency check logic to safely extract strings directly from raw HTML
+					function getTextString($el) {
+						if (!$el || $el.length === 0) return "";
+						return $el.text().trim() || "";
 					}
 
 					// 1. Capture Main Product Details
@@ -1402,16 +1477,15 @@ class DD_WooCommerce_Customizer
 						}
 					}
 
-					// Safely locate the active displayed price for the main product
+					// Safely locate the active displayed price string for the main product
 					var $mainPriceEl = $('.woocommerce-variation-price .woocommerce-Price-amount').last();
-					if ($mainPriceEl.length === 0) {
+					if ($mainPriceEl.length === 0 || !$mainPriceEl.is(':visible')) {
 						$mainPriceEl = $('.summary > .price .woocommerce-Price-amount').last();
 					}
-					var mainPriceData = parsePriceElement($mainPriceEl);
-					totalPrice += (mainPriceData.val * mainQty);
+					var mainPriceStr = getTextString($mainPriceEl) || (currencySymbol + "0.00");
 					
 					productsText += itemIndex + ". " + mainTitle + mainVariationString + "\n";
-					productsText += mainQty + " x " + (mainPriceData.text || (currencySymbol + "0.00")) + "\n\n";
+					productsText += mainQty + " x " + mainPriceStr + "\n\n";
 					itemIndex++;
 
 					// 2. Capture Frequently Bought Together Details
@@ -1439,15 +1513,18 @@ class DD_WooCommerce_Customizer
 
 						// Safe price extraction for FBT row
 						var $fbtPriceEl = $item.find('.dd-fbt-price .woocommerce-Price-amount').last();
-						var fbtPriceData = parsePriceElement($fbtPriceEl);
-						totalPrice += (fbtPriceData.val * qty);
+						var fbtPriceStr = getTextString($fbtPriceEl) || (currencySymbol + "0.00");
 
 						productsText += itemIndex + ". " + title + variationString + "\n";
-						productsText += qty + " x " + (fbtPriceData.text || (currencySymbol + "0.00")) + "\n\n";
+						productsText += qty + " x " + fbtPriceStr + "\n\n";
 						itemIndex++;
 					});
-
-					productsText += "Total: " + currencySymbol + totalPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
+					
+					// Inject the previously calculated DOM total
+					var domTotal = $('.dd-grand-total-value').text();
+					if(domTotal) {
+						productsText += "Total: " + domTotal;
+					}
 
 					// 3. Locate the specific textarea in the GenerateBlocks overlay and map data
 					var $textarea = $(globalTargetFieldSelector);

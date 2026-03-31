@@ -228,7 +228,7 @@ class DD_WooCommerce_Customizer
 				.upsells.products { margin-top: 4em; } 
 				
 				/* FBT Unified Modern Layout Customization */
-				.dd-fbt-wrapper { margin-top: 25px; margin-bottom: 25px; width: 100%; border: 1px solid #ff0000; border-radius: 12px; padding: 20px; background: #f8fafc;}
+				.dd-fbt-wrapper { margin-bottom: 25px; }
 				.dd-fbt-wrapper h4 { margin: 0 0 15px 0; font-size: 14px; font-weight: 600; }
 				.dd-fbt-list { display: flex; flex-direction: column; gap: 10px; }
 				.dd-fbt-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; transition: all 0.2s ease; }

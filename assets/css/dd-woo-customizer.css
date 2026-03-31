@@ -269,6 +269,7 @@ ul.products .woocommerce-text-align-center {
 
 .wc-block-mini-cart__button.wc-block-mini-cart__button:hover {
 	background-color: transparent;
+	color: var(--contrast);
 }
 h2.wc-block-mini-cart__title {
 	font-size: 1.25rem;

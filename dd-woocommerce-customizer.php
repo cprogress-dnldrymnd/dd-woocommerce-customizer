@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, reordered upsells, and a composite unified FBT cart/enquiry system.
- * Version:     1.10.3
+ * Version:     1.10.4
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -131,7 +131,7 @@ class DD_WooCommerce_Customizer
 			'numberposts' => -1,
 			'post_status' => 'publish',
 		]);
-		?>
+?>
 		<div class="wrap">
 			<h1><?php esc_html_e('DD WooCommerce Customizer Settings', 'dd-woo-customizer'); ?></h1>
 			<form method="post" action="options.php">
@@ -165,7 +165,7 @@ class DD_WooCommerce_Customizer
 				<?php submit_button(); ?>
 			</form>
 		</div>
-		<?php
+	<?php
 	}
 
 	/**
@@ -205,24 +205,24 @@ class DD_WooCommerce_Customizer
 		// 2. Process Composite FBT Items seamlessly
 		if (!empty($_POST['fbt_items'])) {
 			$fbt_items = json_decode(wp_unslash($_POST['fbt_items']), true);
-			
+
 			if (is_array($fbt_items)) {
 				foreach ($fbt_items as $item) {
 					$item_id  = absint($item['id']);
 					$item_qty = absint($item['qty']);
-					
+
 					if ($item_id && $item_qty) {
 						$fbt_prod = wc_get_product($item_id);
-						
+
 						if ($fbt_prod) {
 							// If an explicit variation was chosen from our custom FBT dropdowns
 							if (isset($item['variation_id']) && !empty($item['variation_id'])) {
 								WC()->cart->add_to_cart($item_id, $item_qty, absint($item['variation_id']), $item['attributes']);
-							} 
+							}
 							// If a single variation was explicitly assigned as a cross-sell via the backend
 							elseif ($fbt_prod->is_type('variation')) {
 								WC()->cart->add_to_cart($fbt_prod->get_parent_id(), $item_qty, $item_id, $fbt_prod->get_attributes());
-							} 
+							}
 							// Standard simple product addition
 							else {
 								WC()->cart->add_to_cart($item_id, $item_qty);
@@ -247,7 +247,7 @@ class DD_WooCommerce_Customizer
 	 * Enqueue the plugin's custom stylesheet and inline assets.
 	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
 	 *
-	 * @since 1.10.3
+	 * @since 1.10.4
 	 * @return void
 	 */
 	public function enqueue_custom_styles()
@@ -257,7 +257,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.10.3',
+				'1.10.4',
 				'all'
 			);
 
@@ -363,7 +363,7 @@ class DD_WooCommerce_Customizer
 			}
 			$is_card = in_array($attribute_slug, $card_attributes, true);
 		}
-?>
+	?>
 		<div style="padding: 13px; display: block;">
 			<label>
 				<input type="checkbox" class="checkbox" name="attribute_is_card[<?php echo esc_attr($attribute_slug); ?>]" value="1" <?php checked($is_card, true); ?> />
@@ -719,7 +719,7 @@ class DD_WooCommerce_Customizer
 		// 3. Product Settings Panel
 		echo '<div id="dd_product_settings_product_data" class="panel woocommerce_options_panel hidden">';
 		echo '<div class="options_group" style="padding: 10px 20px;">';
-		
+
 		woocommerce_wp_checkbox([
 			'id'          => '_dd_enquire_only',
 			'label'       => __('Enquire Product Only', 'dd-woo-customizer'),
@@ -995,7 +995,7 @@ class DD_WooCommerce_Customizer
 
 				// Output unified checkbox row
 				echo '<div class="dd-fbt-item">';
-				
+
 				// Checkbox toggle
 				echo '<label class="dd-fbt-checkbox-wrapper">';
 				echo '<input type="checkbox" class="dd-fbt-checkbox" value="' . absint($cross_sell->get_id()) . '" data-title="' . esc_attr($title) . '" />';
@@ -1005,10 +1005,10 @@ class DD_WooCommerce_Customizer
 				// Main visual area (Image, Title, Quantity Increments)
 				echo '<div class="dd-fbt-main">';
 				echo wp_kses_post($image);
-				
+
 				echo '<div class="dd-fbt-details" style="width: 100%;">';
 				echo '<span class="dd-fbt-title">' . esc_html($title) . '</span>';
-				
+
 				// Custom inline quantity selector for FBT elements
 				echo '<div class="dd-fbt-qty">';
 				echo '<button type="button" class="dd-qty-btn dd-qty-minus" disabled>-</button>';
@@ -1021,30 +1021,30 @@ class DD_WooCommerce_Customizer
 					$attributes = $cross_sell->get_variation_attributes();
 					$available_variations = $cross_sell->get_available_variations();
 
-					echo '<div class="dd-fbt-variable-options" data-product-id="' . esc_attr($cross_sell->get_id()) . '" data-variations="' . htmlspecialchars( wp_json_encode( $available_variations ), ENT_QUOTES, 'UTF-8' ) . '">';
-					
+					echo '<div class="dd-fbt-variable-options" data-product-id="' . esc_attr($cross_sell->get_id()) . '" data-variations="' . htmlspecialchars(wp_json_encode($available_variations), ENT_QUOTES, 'UTF-8') . '">';
+
 					// Temporarily remove variation cards filter to force native dropdowns inside FBT
 					remove_filter('woocommerce_dropdown_variation_attribute_options_html', [$this, 'render_custom_variation_cards'], 10);
 
-					foreach ( $attributes as $attribute_name => $options ) {
+					foreach ($attributes as $attribute_name => $options) {
 						echo '<div class="dd-fbt-attribute-row">';
-						echo '<label>' . wc_attribute_label( $attribute_name ) . '</label>';
-						
+						echo '<label>' . wc_attribute_label($attribute_name) . '</label>';
+
 						// Dynamically attach the 'fbt_attribute_' prefix to avoid mutating the main product attributes
-						wc_dropdown_variation_attribute_options( array(
+						wc_dropdown_variation_attribute_options(array(
 							'options'   => $options,
 							'attribute' => $attribute_name,
 							'product'   => $cross_sell,
 							'class'     => 'dd-fbt-variation-select',
-							'name'      => 'fbt_attribute_' . sanitize_title( $attribute_name ),
-							'id'        => 'fbt_attr_' . $cross_sell->get_id() . '_' . sanitize_title( $attribute_name )
-						) );
+							'name'      => 'fbt_attribute_' . sanitize_title($attribute_name),
+							'id'        => 'fbt_attr_' . $cross_sell->get_id() . '_' . sanitize_title($attribute_name)
+						));
 						echo '</div>';
 					}
 
 					// Restore custom variation cards for the rest of the page
 					add_filter('woocommerce_dropdown_variation_attribute_options_html', [$this, 'render_custom_variation_cards'], 10, 2);
-					
+
 					// This captures the derived variation ID once the JS parses the user selections above
 					echo '<input type="hidden" class="dd-fbt-variation-id" value="" />';
 					echo '</div>';
@@ -1068,7 +1068,7 @@ class DD_WooCommerce_Customizer
 
 		// Dynamically inject Enquire Now button logic based on custom Meta Flag
 		$is_enquire_only = get_post_meta($product->get_id(), '_dd_enquire_only', true) === 'yes';
-		
+
 		if ($is_enquire_only) {
 			$overlay_id   = get_option('dd_enquire_overlay_id');
 			$trigger_attr = !empty($overlay_id) ? ' data-gb-overlay="gb-overlay-' . absint($overlay_id) . '" aria-controls="gb-overlay-' . absint($overlay_id) . '" aria-haspopup="dialog" aria-expanded="false"' : '';
@@ -1083,9 +1083,9 @@ class DD_WooCommerce_Customizer
 	/**
 	 * Injects unified JavaScript logic for the composite Add to Cart parsing, including
 	 * native DOM event dispatching to forcefully update WooCommerce Gutenberg cart blocks,
-	 * and advanced dynamic variation string extraction for the Enquire mapping.
+	 * advanced dynamic variation string extraction, and complex price tracking for Enquiries.
 	 *
-	 * @since 1.10.3
+	 * @since 1.10.4
 	 * @return void
 	 */
 	public function inject_ajax_add_to_cart_scripts()
@@ -1100,7 +1100,6 @@ class DD_WooCommerce_Customizer
 		<script type="text/javascript">
 			jQuery(document).ready(function($) {
 
-				// FIX: Use wp_json_encode to safely parse strings into JavaScript variables, avoiding jQuery syntax errors with escaped quotes
 				var globalTargetFieldSelector = <?php echo wp_json_encode($target_field); ?>;
 
 				// UI Logics for FBT Checkboxes and Quantity Increments
@@ -1126,7 +1125,7 @@ class DD_WooCommerce_Customizer
 				// Manage control accessibility based on checkbox selection
 				$(document).on('change', '.dd-fbt-checkbox', function() {
 					var $item = $(this).closest('.dd-fbt-item');
-					
+
 					if ($(this).is(':checked')) {
 						$item.addClass('is-selected');
 						$item.find('.dd-qty-btn, .dd-fbt-variation-select').prop('disabled', false);
@@ -1142,7 +1141,7 @@ class DD_WooCommerce_Customizer
 					var variations = JSON.parse($optionsContainer.attr('data-variations'));
 					var selectedAttributes = {};
 					var allSelected = true;
-					
+
 					// Aggregate the specific attributes assigned by the user
 					$optionsContainer.find('.dd-fbt-variation-select').each(function() {
 						var val = $(this).val() || '';
@@ -1156,7 +1155,7 @@ class DD_WooCommerce_Customizer
 					// Reset matching states if not all dropdowns are satisfied
 					if (!allSelected) {
 						$optionsContainer.find('.dd-fbt-variation-id').val('');
-						return; 
+						return;
 					}
 
 					// Intercept and match the isolated attributes against the core WooCommerce JSON object
@@ -1226,23 +1225,31 @@ class DD_WooCommerce_Customizer
 								hasValidationErrors = true;
 								return false; // Safely breaks out of the loop iteration
 							}
-							
+
 							var attributes = {};
 							$item.find('.dd-fbt-variation-select').each(function() {
 								var name = $(this).attr('name').replace('fbt_', '');
 								attributes[name] = $(this).val();
 							});
 
-							fbtItems.push({ id: pid, variation_id: variationId, qty: qty, attributes: attributes });
+							fbtItems.push({
+								id: pid,
+								variation_id: variationId,
+								qty: qty,
+								attributes: attributes
+							});
 						} else {
-							fbtItems.push({ id: pid, qty: qty });
+							fbtItems.push({
+								id: pid,
+								qty: qty
+							});
 						}
 					});
 
 					// Abandon AJAX execution if the user failed the strict variation selection parameters
 					if (hasValidationErrors) {
 						$btn.removeClass('loading wc-loading');
-						return false; 
+						return false;
 					}
 
 					formData.append('fbt_items', JSON.stringify(fbtItems));
@@ -1257,17 +1264,20 @@ class DD_WooCommerce_Customizer
 						contentType: false,
 						success: function(response) {
 							if (response && response.fragments) {
-								
+
 								// Trigger native WooCommerce fragment refresh to update legacy PHP widgets
 								$(document.body).trigger('added_to_cart', [response.fragments, response.cart_hash, $btn]);
-								
+
 								// Explicitly dispatch the native DOM event required to refresh the Gutenberg Mini-Cart Block
-								var blockCartEvent = new CustomEvent('wc-blocks_added_to_cart', { bubbles: true, cancelable: true });
+								var blockCartEvent = new CustomEvent('wc-blocks_added_to_cart', {
+									bubbles: true,
+									cancelable: true
+								});
 								document.body.dispatchEvent(blockCartEvent);
-								
+
 								// Safely remove the loading states
 								$btn.removeClass('loading wc-loading');
-								
+
 								var originalText = $btn.html();
 								$btn.html('Added to cart!');
 								setTimeout(function() {
@@ -1288,11 +1298,43 @@ class DD_WooCommerce_Customizer
 					});
 				});
 
-				// Enquire Now Action Handler (Populates data, lets native GP overlay trigger run)
+				// Enquire Now Action Handler (Populates data, formats string, and tracks prices)
 				$(document).on('click', '.dd-enquire-btn', function(e) {
+					var itemIndex = 1;
+					var productsText = "";
+					var totalPrice = 0;
+					var currencySymbol = "£";
+
+					// Helper function to safely extract raw number and currency string from HTML
+					function parsePriceElement($el) {
+						if (!$el || $el.length === 0) return {
+							text: "",
+							val: 0
+						};
+						var text = $el.text().trim();
+						if (!text) return {
+							text: "",
+							val: 0
+						};
+
+						// Attempt to extract the currency symbol
+						var match = text.match(/[^\d.,\s]+/);
+						if (match) currencySymbol = match[0];
+
+						// Clean number mapping
+						var numStr = text.replace(/,/g, '').replace(/[^\d.]/g, '');
+						var val = parseFloat(numStr);
+						if (isNaN(val)) val = 0;
+
+						return {
+							text: text,
+							val: val
+						};
+					}
+
 					// 1. Capture Main Product Details
 					var mainTitle = $('h1.product_title').text().trim();
-					var mainQty   = $('form.cart .quantity input.qty').val() || 1;
+					var mainQty = parseInt($('form.cart .quantity input.qty').val()) || 1;
 					var mainVariationString = "";
 
 					// Process main product variation selections explicitly via human readable <option> tags
@@ -1310,16 +1352,24 @@ class DD_WooCommerce_Customizer
 							mainVariationString = " (" + mainOpts.join(', ') + ")";
 						}
 					}
-					
-					var itemIndex = 1;
-					var productsText = itemIndex + ". " + mainTitle + mainVariationString + "\nQty: " + mainQty + "\n\n";
+
+					// Safely locate the active displayed price for the main product
+					var $mainPriceEl = $('.woocommerce-variation-price .woocommerce-Price-amount').last();
+					if ($mainPriceEl.length === 0) {
+						$mainPriceEl = $('.summary > .price .woocommerce-Price-amount').last();
+					}
+					var mainPriceData = parsePriceElement($mainPriceEl);
+					totalPrice += (mainPriceData.val * mainQty);
+
+					productsText += itemIndex + ". " + mainTitle + mainVariationString + "\n";
+					productsText += mainQty + " x " + (mainPriceData.text || (currencySymbol + "0.00")) + "\n\n";
 					itemIndex++;
 
 					// 2. Capture Frequently Bought Together Details
 					$('.dd-fbt-checkbox:checked').each(function() {
 						var $item = $(this).closest('.dd-fbt-item');
 						var title = $(this).data('title');
-						var qty   = $item.find('.dd-fbt-qty-input').val();
+						var qty = parseInt($item.find('.dd-fbt-qty-input').val()) || 1;
 						var variationString = "";
 
 						// Append selected variation options to the enquiry text utilizing the readable label
@@ -1338,18 +1388,25 @@ class DD_WooCommerce_Customizer
 							}
 						}
 
-						productsText += itemIndex + ". " + title + variationString + "\nQty: " + qty + "\n\n";
+						// Safe price extraction for FBT row
+						var $fbtPriceEl = $item.find('.dd-fbt-price .woocommerce-Price-amount').last();
+						var fbtPriceData = parsePriceElement($fbtPriceEl);
+						totalPrice += (fbtPriceData.val * qty);
+
+						productsText += itemIndex + ". " + title + variationString + "\n";
+						productsText += qty + " x " + (fbtPriceData.text || (currencySymbol + "0.00")) + "\n\n";
 						itemIndex++;
 					});
 
-					// 3. Locate the specific textarea in the GeneratePress off-canvas menu and map data
-					// Uses the variable mapped securely via wp_json_encode to prevent string syntax errors
+					productsText += "Total: " + currencySymbol + totalPrice.toFixed(2);
+
+					// 3. Locate the specific textarea in the GenerateBlocks overlay and map data
 					var $textarea = $(globalTargetFieldSelector);
 					if ($textarea.length > 0) {
 						$textarea.val(productsText.trim());
 					}
-					
-					// GenerateBlocks automatically handles opening the overlay via the data-gb-overlay attribute
+
+					// GenerateBlocks automatically handles opening the overlay via the data-gb-overlay attribute natively
 				});
 
 			});

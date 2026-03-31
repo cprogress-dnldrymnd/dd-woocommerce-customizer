@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, reordered upsells, and a composite unified FBT cart/enquiry system.
- * Version:     1.11.0
+ * Version:     1.11.1
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -245,7 +245,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Enqueue the plugin's custom stylesheet and inline assets.
-	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
 	 *
 	 * @since 1.11.0
 	 * @return void
@@ -257,7 +256,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.11.0',
+				'1.11.1',
 				'all'
 			);
 
@@ -1044,7 +1043,7 @@ class DD_WooCommerce_Customizer
 	 * Now injects dynamic variation dropdowns for Parent Variable products, explicitly disabling 
 	 * the custom variation card layouts for these nested FBT items to force native dropdowns.
 	 *
-	 * @since 1.11.0
+	 * @since 1.11.1
 	 * @return void
 	 */
 	public function display_frequently_bought_together_and_enquire_btn()
@@ -1139,8 +1138,8 @@ class DD_WooCommerce_Customizer
 				echo '</div>'; // close details
 				echo '</div>'; // close main
 
-				// Right-aligned Price Area
-				echo '<div class="dd-fbt-price-wrap">';
+				// Right-aligned Price Area (saving original HTML for safe resetting)
+				echo '<div class="dd-fbt-price-wrap" data-original-price="' . esc_attr($price_html) . '">';
 				echo '<span class="dd-fbt-price">' . wp_kses_post($price_html) . '</span>';
 				echo '<span class="dd-fbt-price-suffix">' . esc_html__('excl. VAT', 'dd-woo-customizer') . '</span>';
 				echo '</div>';
@@ -1177,7 +1176,7 @@ class DD_WooCommerce_Customizer
 	 * native DOM event dispatching to forcefully update WooCommerce Gutenberg cart blocks,
 	 * advanced dynamic variation string extraction, and complex price tracking for Enquiries.
 	 *
-	 * @since 1.11.0
+	 * @since 1.11.1
 	 * @return void
 	 */
 	public function inject_ajax_add_to_cart_scripts()
@@ -1224,9 +1223,19 @@ class DD_WooCommerce_Customizer
 					}
 					totalPrice += (parsePriceElement($mainPriceEl) * mainQty);
 
-					// 2. Extrapolate FBT Calculations 
+					// 2. Extrapolate FBT Calculations securely matching active validation
 					$('.dd-fbt-checkbox:checked').each(function() {
 						var $item = $(this).closest('.dd-fbt-item');
+						
+						// If item is variable, ensure a variation is actively selected before parsing price
+						var $varOptions = $item.find('.dd-fbt-variable-options');
+						if ($varOptions.length > 0) {
+							var varId = $item.find('.dd-fbt-variation-id').val();
+							if (!varId || varId === '') {
+								return true; // continue next loop iteration
+							}
+						}
+
 						var qty = parseInt($item.find('.dd-fbt-qty-input').val()) || 1;
 						var $fbtPriceEl = $item.find('.dd-fbt-price .woocommerce-Price-amount').first();
 						totalPrice += (parsePriceElement($fbtPriceEl) * qty);
@@ -1300,6 +1309,13 @@ class DD_WooCommerce_Customizer
 					// Reset matching states if not all dropdowns are satisfied
 					if (!allSelected) {
 						$optionsContainer.find('.dd-fbt-variation-id').val('');
+						
+						var $item = $optionsContainer.closest('.dd-fbt-item');
+						var originalPrice = $item.find('.dd-fbt-price-wrap').attr('data-original-price');
+						if (originalPrice) {
+							$item.find('.dd-fbt-price').html(originalPrice);
+						}
+
 						calculateGrandTotal();
 						return; 
 					}
@@ -1462,6 +1478,7 @@ class DD_WooCommerce_Customizer
 					var mainQty   = parseInt($('form.cart .quantity input.qty').val()) || 1;
 					var mainVariationString = "";
 
+					// Process main product variation selections explicitly via human readable <option> tags
 					var $mainVarOptions = $('form.cart .variations select');
 					if ($mainVarOptions.length > 0) {
 						var mainOpts = [];
@@ -1494,6 +1511,7 @@ class DD_WooCommerce_Customizer
 						var qty   = parseInt($item.find('.dd-fbt-qty-input').val()) || 1;
 						var variationString = "";
 
+						// Append selected variation options to the enquiry text utilizing the readable label
 						var $varOptions = $item.find('.dd-fbt-variation-select');
 						if ($varOptions.length > 0) {
 							var opts = [];

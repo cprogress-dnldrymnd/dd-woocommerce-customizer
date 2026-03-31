@@ -267,7 +267,7 @@ ul.products .woocommerce-text-align-center {
 	pointer-events: none !important;
 }
 
-.wc-block-mini-cart__button.wc-block-mini-cart__button:hover {
+.wc-block-mini-cart__button.wc-block-mini-cart__button:hover, .wc-block-mini-cart__button.wc-block-mini-cart__button:focus, .wc-block-mini-cart__button.wc-block-mini-cart__button:active {
 	background-color: transparent;
 	color: var(--contrast);
 }

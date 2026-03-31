@@ -231,7 +231,7 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-wrapper { margin-bottom: 25px; }
 				.dd-fbt-wrapper h4 { margin: 0 0 15px 0; font-size: 14px; font-weight: 600; }
 				.dd-fbt-list { display: flex; flex-direction: column; gap: 10px; }
-				.dd-fbt-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; transition: all 0.2s ease; }
+				.dd-fbt-item { gap: 0.5rem; display: flex; align-items: center; justify-content: space-between; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; transition: all 0.2s ease; }
 				.dd-fbt-item.is-selected { border-color: #ff0000; background: #fff5f5; }
 				
 				/* FBT Locked/Disabled states */
@@ -246,7 +246,7 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-checkbox-wrapper input:checked ~ .dd-fbt-checkmark { border-color: #ff0000; }
 				.dd-fbt-checkbox-wrapper input:checked ~ .dd-fbt-checkmark:after { content: ''; position: absolute; display: block; top: 4px; left: 4px; width: 8px; height: 8px; border-radius: 50%; background: #ff0000; }
 				
-				.dd-fbt-main { display: flex; align-items: flex-start; gap: 15px; flex-grow: 1; margin-left: 10px;}
+				.dd-fbt-main { display: flex; align-items: flex-start; gap: 15px; flex-grow: 1;}
 				.dd-fbt-main img { width: 60px; height: 60px; object-fit: contain; }
 				.dd-fbt-details { display: flex; flex-direction: column; gap: 8px; width: 100%;}
 				.dd-fbt-title { font-size: 0.9rem; font-weight: 500; color: #000000; line-height: 1.2;}

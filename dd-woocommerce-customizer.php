@@ -249,11 +249,11 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-main { display: flex; align-items: flex-start; gap: 15px; flex-grow: 1; margin-left: 10px;}
 				.dd-fbt-main img { width: 40px; height: 40px; object-fit: contain; }
 				.dd-fbt-details { display: flex; flex-direction: column; gap: 8px; width: 100%;}
-				.dd-fbt-title { font-size: 0.9rem; font-weight: 500; color: #1e293b; line-height: 1.2;}
+				.dd-fbt-title { font-size: 0.9rem; font-weight: 500; color: #000000; line-height: 1.2;}
 				
-				.dd-fbt-qty { display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 4px; width: fit-content; background: #fff;}
-				.dd-qty-btn { background: none; border: none; padding: 2px 8px; cursor: pointer; font-size: 1rem; color: #64748b; line-height: 1;}
-				.dd-qty-btn:hover { color: #1e293b; }
+				.dd-fbt-qty { display: flex; align-items: center; border-radius: 4px; width: fit-content;}
+				.dd-qty-btn.dd-qty-btn { padding: 2px 8px; cursor: pointer; font-size: 1rem; color: #64748b; line-height: 1; border: 1px solid #EAEAEA; background-color: #fff; height: 24px; width: 24px; display: flex; align-items: center; justify-content: center; }
+				.dd-qty-btn:hover { color: #000000; }
 				.dd-fbt-qty-input.dd-fbt-qty-input { min-height: unset; border: none !important; background: transparent !important; width: 30px !important; text-align: center; padding: 0 !important; font-size: 0.85rem; -moz-appearance: textfield; box-shadow: none !important;}
 				.dd-fbt-qty-input::-webkit-outer-spin-button, .dd-fbt-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 				

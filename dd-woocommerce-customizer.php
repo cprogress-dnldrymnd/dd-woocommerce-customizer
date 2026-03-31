@@ -92,6 +92,8 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Registers the Global Settings menu under WooCommerce.
+	 *
+	 * @since 1.10.0
 	 */
 	public function add_admin_menu()
 	{
@@ -107,18 +109,28 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Registers Global Settings fields for the DD Customizer page.
+	 *
+	 * @since 1.10.0
 	 */
 	public function register_admin_settings()
 	{
-		register_setting('dd_woo_customizer_settings', 'dd_enquire_overlay_selector');
+		register_setting('dd_woo_customizer_settings', 'dd_enquire_overlay_id');
 		register_setting('dd_woo_customizer_settings', 'dd_enquire_target_field');
 	}
 
 	/**
-	 * Renders the Global Settings HTML page.
+	 * Renders the Global Settings HTML page with dynamic GenerateBlocks mapping.
+	 *
+	 * @since 1.10.0
 	 */
 	public function render_admin_settings_page()
 	{
+		// Dynamically fetch all generated Overlay Panels from GenerateBlocks Pro
+		$overlays = get_posts([
+			'post_type'   => 'gblocks_overlay',
+			'numberposts' => -1,
+			'post_status' => 'publish',
+		]);
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e('DD WooCommerce Customizer Settings', 'dd-woo-customizer'); ?></h1>
@@ -129,17 +141,24 @@ class DD_WooCommerce_Customizer
 				?>
 				<table class="form-table">
 					<tr valign="top">
-						<th scope="row"><?php esc_html_e('Enquire Overlay Trigger Selector', 'dd-woo-customizer'); ?></th>
+						<th scope="row"><?php esc_html_e('GenerateBlocks Overlay Panel', 'dd-woo-customizer'); ?></th>
 						<td>
-							<input type="text" name="dd_enquire_overlay_selector" value="<?php echo esc_attr(get_option('dd_enquire_overlay_selector', '.slideout-toggle a')); ?>" class="regular-text" />
-							<p class="description"><?php esc_html_e('CSS selector for the button/link that opens the GenerateBlocks overlay (e.g., .slideout-toggle a or #my-overlay-trigger)', 'dd-woo-customizer'); ?></p>
+							<select name="dd_enquire_overlay_id" class="regular-text">
+								<option value=""><?php esc_html_e('-- Select an Overlay Panel --', 'dd-woo-customizer'); ?></option>
+								<?php foreach ($overlays as $overlay) : ?>
+									<option value="<?php echo esc_attr($overlay->ID); ?>" <?php selected(get_option('dd_enquire_overlay_id'), $overlay->ID); ?>>
+										<?php echo esc_html($overlay->post_title); ?>
+									</option>
+								<?php endforeach; ?>
+							</select>
+							<p class="description"><?php esc_html_e('Select the GenerateBlocks Overlay Panel to open when clicking the Enquire Now button.', 'dd-woo-customizer'); ?></p>
 						</td>
 					</tr>
 					<tr valign="top">
 						<th scope="row"><?php esc_html_e('Enquire Target Field Selector', 'dd-woo-customizer'); ?></th>
 						<td>
 							<input type="text" name="dd_enquire_target_field" value="<?php echo esc_attr(get_option('dd_enquire_target_field', 'textarea[name="products"]')); ?>" class="regular-text" />
-							<p class="description"><?php esc_html_e('CSS selector for the form field where product names and quantities will be appended.', 'dd-woo-customizer'); ?></p>
+							<p class="description"><?php esc_html_e('CSS selector for the form field (inside the overlay) where product names and quantities will be appended.', 'dd-woo-customizer'); ?></p>
 						</td>
 					</tr>
 				</table>
@@ -151,6 +170,10 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Custom AJAX endpoint to process cart additions for complex variable products alongside FBT selections.
+	 * Now natively accepts dynamic variation mappings processed from the unified frontend interface.
+	 *
+	 * @since 1.9.1
+	 * @return void
 	 */
 	public function handle_ajax_add_to_cart()
 	{
@@ -223,6 +246,10 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Enqueue the plugin's custom stylesheet and inline assets.
+	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
+	 *
+	 * @since 1.9.5
+	 * @return void
 	 */
 	public function enqueue_custom_styles()
 	{
@@ -235,6 +262,7 @@ class DD_WooCommerce_Customizer
 				'all'
 			);
 
+			// Inline styles mapping the bespoke unified variation selections and FBT components
 			$custom_css = "
 				.dd-downloads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
 				.dd-download-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: flex-start; background: #f8fafc; transition: all 0.2s ease-in-out; }
@@ -593,7 +621,6 @@ class DD_WooCommerce_Customizer
 			'priority' => 71,
 		];
 
-		// Newly requested Product Settings Tab explicitly added below Downloads
 		$tabs['dd_product_settings'] = [
 			'label'    => __('Product Settings', 'dd-woo-customizer'),
 			'target'   => 'dd_product_settings_product_data',
@@ -690,7 +717,7 @@ class DD_WooCommerce_Customizer
 	<?php
 		echo '</div></div>';
 
-		// 3. Product Settings Panel (New Boolean Enquire Settings)
+		// 3. Product Settings Panel
 		echo '<div id="dd_product_settings_product_data" class="panel woocommerce_options_panel hidden">';
 		echo '<div class="options_group" style="padding: 10px 20px;">';
 		
@@ -1044,8 +1071,11 @@ class DD_WooCommerce_Customizer
 		$is_enquire_only = get_post_meta($product->get_id(), '_dd_enquire_only', true) === 'yes';
 		
 		if ($is_enquire_only) {
-			// Output our custom trigger button that mimics the native add to cart styling
-			echo '<button type="button" class="dd-enquire-btn button alt">' . esc_html__('ENQUIRE NOW', 'dd-woo-customizer') . '</button>';
+			$overlay_id   = get_option('dd_enquire_overlay_id');
+			$trigger_attr = !empty($overlay_id) ? ' data-gb-overlay-trigger="gb-overlay-' . absint($overlay_id) . '"' : '';
+
+			// Output our custom trigger button with the native GenerateBlocks trigger attribute
+			echo '<button type="button" class="dd-enquire-btn button alt"' . $trigger_attr . '>' . esc_html__('ENQUIRE NOW', 'dd-woo-customizer') . '</button>';
 			// Inject CSS to gracefully hide the standard WooCommerce add to cart button
 			echo '<style>.single_add_to_cart_button { display: none !important; }</style>';
 		}
@@ -1053,7 +1083,8 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Injects unified JavaScript logic for the composite Add to Cart parsing, including
-	 * the new dynamic variation string generator mapped to user-defined Global Settings.
+	 * native DOM event dispatching to forcefully update WooCommerce Gutenberg cart blocks,
+	 * and advanced dynamic variation string extraction for the Enquire mapping.
 	 *
 	 * @since 1.10.0
 	 * @return void
@@ -1065,15 +1096,12 @@ class DD_WooCommerce_Customizer
 		}
 
 		// Fetch Global Selectors
-		$overlay_trigger = get_option('dd_enquire_overlay_selector', '.slideout-toggle a');
-		$target_field    = get_option('dd_enquire_target_field', 'textarea[name="products"]');
+		$target_field = get_option('dd_enquire_target_field', 'textarea[name="products"]');
 	?>
 		<script type="text/javascript">
 			jQuery(document).ready(function($) {
 
-				// Localized Global Settings passed from backend
-				var globalOverlayTriggerSelector = '<?php echo esc_js($overlay_trigger); ?>';
-				var globalTargetFieldSelector    = '<?php echo esc_js($target_field); ?>';
+				var globalTargetFieldSelector = '<?php echo esc_js($target_field); ?>';
 
 				// UI Logics for FBT Checkboxes and Quantity Increments
 				$(document).on('click', '.dd-qty-plus', function() {
@@ -1262,8 +1290,6 @@ class DD_WooCommerce_Customizer
 
 				// Enquire Now Action Handler (Global GenerateBlocks Overlay Mapping)
 				$(document).on('click', '.dd-enquire-btn', function(e) {
-					e.preventDefault();
-
 					// 1. Capture Main Product Details
 					var mainTitle = $('h1.product_title').text().trim();
 					var mainQty   = $('form.cart .quantity input.qty').val() || 1;
@@ -1294,7 +1320,7 @@ class DD_WooCommerce_Customizer
 						var qty   = $item.find('.dd-fbt-qty-input').val();
 						var variationString = "";
 
-						// Append selected variation options to the enquiry text
+						// Append selected variation options to the enquiry text utilizing the readable label
 						var $varOptions = $item.find('.dd-fbt-variation-select');
 						if ($varOptions.length > 0) {
 							var opts = [];
@@ -1318,20 +1344,8 @@ class DD_WooCommerce_Customizer
 					if ($targetField.length > 0) {
 						$targetField.val(productsText.trim());
 					}
-
-					// 4. Trigger the dynamically configured overlay element
-					if (globalOverlayTriggerSelector) {
-						var $trigger = $(globalOverlayTriggerSelector);
-						if ($trigger.length > 0) {
-							$trigger[0].click(); // Mimic exact native mouse click logic
-						} else {
-							// Fallback trigger mechanisms for missing icon containers using legacy Slideout schema
-							if (globalOverlayTriggerSelector === '.slideout-toggle a') {
-								$('body').addClass('offside-js--is-open slide-opened');
-								$('.slideout-overlay').show();
-							}
-						}
-					}
+					
+					// GenerateBlocks automatically handles opening the overlay via the data-gb-overlay-trigger attribute
 				});
 
 			});

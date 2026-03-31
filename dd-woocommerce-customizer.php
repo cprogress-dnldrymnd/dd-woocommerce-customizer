@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, reordered upsells, and a composite unified FBT cart/enquiry system.
- * Version:     1.10.2
+ * Version:     1.10.3
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -247,7 +247,7 @@ class DD_WooCommerce_Customizer
 	 * Enqueue the plugin's custom stylesheet and inline assets.
 	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
 	 *
-	 * @since 1.10.1
+	 * @since 1.10.3
 	 * @return void
 	 */
 	public function enqueue_custom_styles()
@@ -257,7 +257,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.10.2',
+				'1.10.3',
 				'all'
 			);
 
@@ -311,7 +311,8 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-attribute-row { margin-bottom: 8px; width: 100%; display: flex; align-items: center; gap: 0.5rem }
 				.dd-fbt-attribute-row label { display: block; font-size: 0.8rem; font-weight: 600; color: #000; margin-bottom: 4px; white-space: nowrap}
 				.dd-fbt-variation-select.dd-fbt-variation-select { min-height: unset; width: 100%; max-width: 100%; font-size: 0.85rem; padding: 6px 8px; border-radius: 4px; border: 1px solid #cbd5e1; background: #f8fafc; }
-			/* Enquire Now Button overriding to match GP schema as an <a> tag */
+
+				/* Enquire Now Button overriding to match GP schema as an <a> tag */
 				.dd-enquire-btn { order: 3; width: auto; flex-grow: 1; display: block; text-align: center; box-sizing: border-box; text-decoration: none; background: #ff0000 !important; color: #fff !important; border-radius: 4px; font-weight: 600; padding: 15px !important; border: none; cursor: pointer; transition: opacity 0.2s; }
 				.dd-enquire-btn:hover, .dd-enquire-btn:focus { opacity: 0.9; color: #fff !important; }
 			";
@@ -1084,7 +1085,7 @@ class DD_WooCommerce_Customizer
 	 * native DOM event dispatching to forcefully update WooCommerce Gutenberg cart blocks,
 	 * and advanced dynamic variation string extraction for the Enquire mapping.
 	 *
-	 * @since 1.10.2
+	 * @since 1.10.3
 	 * @return void
 	 */
 	public function inject_ajax_add_to_cart_scripts()
@@ -1311,7 +1312,7 @@ class DD_WooCommerce_Customizer
 					}
 					
 					var itemIndex = 1;
-					var productsText = itemIndex + ". " + mainTitle + mainVariationString + "\\nQty: " + mainQty + "\\n\\n";
+					var productsText = itemIndex + ". " + mainTitle + mainVariationString + "\nQty: " + mainQty + "\n\n";
 					itemIndex++;
 
 					// 2. Capture Frequently Bought Together Details
@@ -1337,7 +1338,7 @@ class DD_WooCommerce_Customizer
 							}
 						}
 
-						productsText += itemIndex + ". " + title + variationString + "\\nQty: " + qty + "\\n\\n";
+						productsText += itemIndex + ". " + title + variationString + "\nQty: " + qty + "\n\n";
 						itemIndex++;
 					});
 

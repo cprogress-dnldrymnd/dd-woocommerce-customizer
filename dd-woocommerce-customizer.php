@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, reordered upsells, and a composite unified FBT cart/enquiry system.
- * Version:     1.11.1
+ * Version:     1.11.2
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -245,6 +245,7 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Enqueue the plugin's custom stylesheet and inline assets.
+	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
 	 *
 	 * @since 1.11.0
 	 * @return void
@@ -256,7 +257,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.11.1',
+				'1.11.2',
 				'all'
 			);
 
@@ -1176,7 +1177,7 @@ class DD_WooCommerce_Customizer
 	 * native DOM event dispatching to forcefully update WooCommerce Gutenberg cart blocks,
 	 * advanced dynamic variation string extraction, and complex price tracking for Enquiries.
 	 *
-	 * @since 1.11.1
+	 * @since 1.11.2
 	 * @return void
 	 */
 	public function inject_ajax_add_to_cart_scripts()
@@ -1374,8 +1375,15 @@ class DD_WooCommerce_Customizer
 					$btn.addClass('loading wc-loading');
 
 					var formData = new FormData($form[0]);
+
+					// CRITICAL FIX: Strip the native WooCommerce 'add-to-cart' identifier from the payload.
+					// If this parameter reaches admin-ajax.php, WooCommerce's WC_Form_Handler intercepts it 
+					// early in the 'wp_loaded' boot sequence and double-adds the product to the cart.
+					formData.delete('add-to-cart');
+
 					formData.append('action', 'dd_ajax_add_to_cart');
 
+					// Securely parse the product ID back into the payload using our custom key
 					var productId = $btn.val() || $form.find('input[name="add-to-cart"]').val();
 					if (productId) {
 						formData.append('product_id', productId);

@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, reordered upsells, and a composite unified FBT cart/enquiry system.
- * Version:     1.9.6
+ * Version:     1.10.1
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -49,11 +49,7 @@ class DD_WooCommerce_Customizer
 		// Intercept the core product CRUD object save to persist configurations.
 		add_action('woocommerce_before_product_object_save', [$this, 'save_card_layout_configuration']);
 
-		// General Product Meta: Add Enquire Only Checkbox
-		add_action('woocommerce_product_options_general_product_data', [$this, 'add_enquire_only_checkbox']);
-		add_action('woocommerce_process_product_meta', [$this, 'save_enquire_only_checkbox']);
-
-		// Backend: Add Custom Product Data Tabs (Logical Partitioning)
+		// Backend: Add Custom Product Data Tabs (Logical Partitioning & Enquire Setting)
 		add_filter('woocommerce_product_data_tabs', [$this, 'add_custom_product_data_tabs']);
 
 		// Backend: Add Custom Product Data Panels
@@ -65,7 +61,7 @@ class DD_WooCommerce_Customizer
 		// Backend: Enqueue Admin Scripts for Repeater & Media Uploader
 		add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
 
-		// Backend: Global Settings Page
+		// Backend: Global Settings Page for GenerateBlocks Overlays
 		add_action('admin_menu', [$this, 'add_admin_menu']);
 		add_action('admin_init', [$this, 'register_admin_settings']);
 
@@ -174,7 +170,6 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Custom AJAX endpoint to process cart additions for complex variable products alongside FBT selections.
-	 * Now natively accepts dynamic variation mappings processed from the unified frontend interface.
 	 *
 	 * @since 1.9.1
 	 * @return void
@@ -252,7 +247,7 @@ class DD_WooCommerce_Customizer
 	 * Enqueue the plugin's custom stylesheet and inline assets.
 	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
 	 *
-	 * @since 1.9.5
+	 * @since 1.10.1
 	 * @return void
 	 */
 	public function enqueue_custom_styles()
@@ -262,7 +257,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.9.6',
+				'1.10.1',
 				'all'
 			);
 
@@ -963,7 +958,7 @@ class DD_WooCommerce_Customizer
 	 * Now injects dynamic variation dropdowns for Parent Variable products, explicitly disabling 
 	 * the custom variation card layouts for these nested FBT items to force native dropdowns.
 	 *
-	 * @since 1.10.0
+	 * @since 1.10.1
 	 * @return void
 	 */
 	public function display_frequently_bought_together_and_enquire_btn()
@@ -1090,7 +1085,7 @@ class DD_WooCommerce_Customizer
 	 * native DOM event dispatching to forcefully update WooCommerce Gutenberg cart blocks,
 	 * and advanced dynamic variation string extraction for the Enquire mapping.
 	 *
-	 * @since 1.10.0
+	 * @since 1.10.1
 	 * @return void
 	 */
 	public function inject_ajax_add_to_cart_scripts()
@@ -1105,7 +1100,8 @@ class DD_WooCommerce_Customizer
 		<script type="text/javascript">
 			jQuery(document).ready(function($) {
 
-				var globalTargetFieldSelector = '<?php echo esc_js($target_field); ?>';
+				// FIX: Use wp_json_encode to safely parse strings into JavaScript variables, avoiding jQuery syntax errors with escaped quotes
+				var globalTargetFieldSelector = <?php echo wp_json_encode($target_field); ?>;
 
 				// UI Logics for FBT Checkboxes and Quantity Increments
 				$(document).on('click', '.dd-qty-plus', function() {
@@ -1344,6 +1340,7 @@ class DD_WooCommerce_Customizer
 					});
 
 					// 3. Locate the specific textarea in the GeneratePress off-canvas menu and map data
+					// Uses the variable mapped securely via wp_json_encode to prevent string syntax errors
 					var $textarea = $(globalTargetFieldSelector);
 					if ($textarea.length > 0) {
 						$textarea.val(productsText.trim());

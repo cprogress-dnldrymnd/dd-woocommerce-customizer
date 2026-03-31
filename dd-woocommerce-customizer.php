@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, reordered upsells, and a composite unified FBT cart/enquiry system.
- * Version:     1.10.5
+ * Version:     1.11.0
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -245,9 +245,8 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Enqueue the plugin's custom stylesheet and inline assets.
-	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
 	 *
-	 * @since 1.10.5
+	 * @since 1.11.0
 	 * @return void
 	 */
 	public function enqueue_custom_styles()
@@ -257,11 +256,10 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.10.5',
+				'1.11.0',
 				'all'
 			);
 
-			// Inline styles mapping the bespoke unified variation selections and FBT components
 			$custom_css = "
 				.dd-downloads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
 				.dd-download-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: flex-start; background: #f8fafc; transition: all 0.2s ease-in-out; }
@@ -407,7 +405,7 @@ class DD_WooCommerce_Customizer
 	/**
 	 * Transform default variation dropdowns into interactive cards.
 	 *
-	 * @since 1.10.5 Updated to securely parse and render individual variation prices.
+	 * @since 1.11.0 Updated to accurately inject pricing to the right side of the card.
 	 */
 	public function render_custom_variation_cards($html, $args)
 	{
@@ -460,11 +458,9 @@ class DD_WooCommerce_Customizer
 			$option_val  = esc_attr($option);
 			$option_name = esc_html(apply_filters('woocommerce_variation_option_name', $option, null, $attribute, $product));
 			$image_html  = '';
-			$price_html  = ''; // Initialize dynamic price string
+			$price_html  = '';
 
 			$attr_key = 'attribute_' . sanitize_title($attribute);
-			
-			// Resolve associated images and prices specific to this attribute option
 			foreach ($available_variations as $variation) {
 				if (isset($variation['attributes'][$attr_key]) && $variation['attributes'][$attr_key] === $option) {
 					if (! empty($variation['image']['thumb_src'])) {
@@ -473,7 +469,7 @@ class DD_WooCommerce_Customizer
 					if (! empty($variation['price_html'])) {
 						$price_html = wp_kses_post($variation['price_html']);
 					}
-					break; // Found the matching variation, halt processing for this loop
+					break; // Break on first match; JavaScript handles dynamic updating
 				}
 			}
 
@@ -483,13 +479,12 @@ class DD_WooCommerce_Customizer
 			if ($image_html) {
 				$custom_html .= '<div class="dd-variation-card-img">' . $image_html . '</div>';
 			}
-			// Encapsulate textual details securely
 			$custom_html .= '<div class="dd-variation-card-details">';
 			$custom_html .= '<div class="dd-variation-card-title">' . $option_name . '</div>';
+			$custom_html .= '</div>';
 			if ($price_html) {
 				$custom_html .= '<div class="dd-variation-card-price">' . $price_html . '</div>';
 			}
-			$custom_html .= '</div>'; // End details block
 			$custom_html .= '</div>';
 		}
 
@@ -501,7 +496,7 @@ class DD_WooCommerce_Customizer
 	/**
 	 * Inject necessary JavaScript logic and CSS styling for the interactive variations.
 	 *
-	 * @since 1.10.5 Includes layout adjustments for inline variation prices.
+	 * @since 1.11.0 Added dynamic price updates for complex variable combinations.
 	 */
 	public function inject_variation_ui_assets()
 	{
@@ -562,6 +557,7 @@ class DD_WooCommerce_Customizer
 				display: flex;
 				flex-direction: column;
 				gap: 4px;
+				flex-grow: 1; /* Pushes the price block securely to the right edge */
 			}
 
 			.dd-variation-card-title {
@@ -571,25 +567,45 @@ class DD_WooCommerce_Customizer
 			}
 
 			.dd-variation-card-price {
-				font-size: 13px;
+				font-size: 14px;
 				font-weight: 600;
 				color: var(--accent);
+				white-space: nowrap;
+				margin-left: 15px;
+				text-align: right;
 			}
 		</style>
 
 		<script type="text/javascript">
 			jQuery(document).ready(function($) {
 				function syncCustomVariationsState() {
+					// Iterate over variation grids independently, securely locating their parent form definitions
 					$('.dd-custom-variations-grid').each(function() {
 						var $grid = $(this);
 						var selectId = $grid.data('select-id');
 						var $select = $('#' + selectId);
 						if (!$select.length) return;
+						
+						var $form = $grid.closest('.variations_form');
+						var variationsData = $form.data('product_variations');
+						var attributeName = $select.data('attribute_name') || $select.attr('name');
 						var currentVal = $select.val();
+
+						// Capture live settings across the entire variable form to calculate accurate dynamic pricing
+						var currentSettings = {};
+						if (variationsData) {
+							$form.find('.variations select').each(function() {
+								var name = $(this).data('attribute_name') || $(this).attr('name');
+								currentSettings[name] = $(this).val();
+							});
+						}
+
 						$grid.find('.dd-variation-card').each(function() {
 							var $card = $(this);
 							var cardVal = $card.data('value');
 							var $option = $select.find('option[value="' + cardVal + '"]');
+							
+							// 1. Sync Disabled and Selection States
 							if ($option.length === 0 || $option.prop('disabled') || $option.hasClass('disabled')) {
 								$card.addClass('disabled').removeClass('selected');
 							} else {
@@ -600,14 +616,39 @@ class DD_WooCommerce_Customizer
 									$card.removeClass('selected');
 								}
 							}
+
+							// 2. Execute Dynamic Price Lookups via WooCommerce's Variations Object
+							if (variationsData) {
+								var testSettings = $.extend({}, currentSettings);
+								testSettings[attributeName] = cardVal;
+								
+								// Isolate the specific variation node resolving these exact attribute settings
+								var matchingVariation = variationsData.find(function(v) {
+									return Object.keys(testSettings).every(function(key) {
+										// Empty implies user hasn't made selection; wildcard matches any explicit variation
+										return testSettings[key] === '' || v.attributes[key] === '' || v.attributes[key] === testSettings[key];
+									});
+								});
+
+								if (matchingVariation && matchingVariation.price_html) {
+									var $priceEl = $card.find('.dd-variation-card-price');
+									if ($priceEl.length === 0) {
+										$card.append('<div class="dd-variation-card-price">' + matchingVariation.price_html + '</div>');
+									} else {
+										$priceEl.html(matchingVariation.price_html);
+									}
+								}
+							}
 						});
 					});
 				}
 
+				// Hook explicitly into WooCommerce's native state event handlers
 				$('.variations_form').on('woocommerce_update_variation_values reset_data', function() {
 					setTimeout(syncCustomVariationsState, 50);
 				});
 
+				// Dispatch DOM events triggering WooCommerce core scripts securely
 				$(document).on('click', '.dd-variation-card:not(.disabled)', function() {
 					var $card = $(this);
 					var $grid = $card.closest('.dd-custom-variations-grid');
@@ -1406,7 +1447,7 @@ class DD_WooCommerce_Customizer
 						itemIndex++;
 					});
 
-					productsText += "Total: " + currencySymbol + totalPrice.toFixed(2);
+					productsText += "Total: " + currencySymbol + totalPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
 
 					// 3. Locate the specific textarea in the GenerateBlocks overlay and map data
 					var $textarea = $(globalTargetFieldSelector);

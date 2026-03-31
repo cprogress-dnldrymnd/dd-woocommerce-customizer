@@ -254,7 +254,7 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-qty { display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 4px; width: fit-content; background: #fff;}
 				.dd-qty-btn { background: none; border: none; padding: 2px 8px; cursor: pointer; font-size: 1rem; color: #64748b; line-height: 1;}
 				.dd-qty-btn:hover { color: #1e293b; }
-				.dd-fbt-qty-input { border: none !important; background: transparent !important; width: 30px !important; text-align: center; padding: 0 !important; font-size: 0.85rem; -moz-appearance: textfield; box-shadow: none !important;}
+				.dd-fbt-qty-input.dd-fbt-qty-input { min-height: unset; border: none !important; background: transparent !important; width: 30px !important; text-align: center; padding: 0 !important; font-size: 0.85rem; -moz-appearance: textfield; box-shadow: none !important;}
 				.dd-fbt-qty-input::-webkit-outer-spin-button, .dd-fbt-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 				
 				.dd-fbt-price-wrap { text-align: right; white-space: nowrap; align-self: flex-start; }

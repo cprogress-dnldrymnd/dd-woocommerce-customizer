@@ -311,9 +311,8 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-attribute-row { margin-bottom: 8px; width: 100%; display: flex; align-items: center; gap: 0.5rem }
 				.dd-fbt-attribute-row label { display: block; font-size: 0.8rem; font-weight: 600; color: #000; margin-bottom: 4px; white-space: nowrap}
 				.dd-fbt-variation-select.dd-fbt-variation-select { min-height: unset; width: 100%; max-width: 100%; font-size: 0.85rem; padding: 6px 8px; border-radius: 4px; border: 1px solid #cbd5e1; background: #f8fafc; }
-
-				/* Enquire Now Button overriding to match GP schema as an <a> tag */
-				.dd-enquire-btn { display: block; text-align: center; box-sizing: border-box; text-decoration: none; width: 100%; margin-top: 15px; background: #ff0000 !important; color: #fff !important; border-radius: 4px; font-weight: 600; padding: 15px !important; border: none; cursor: pointer; transition: opacity 0.2s; }
+			/* Enquire Now Button overriding to match GP schema as an <a> tag */
+				.dd-enquire-btn { order: 3; width: auto; flex-grow: 1; display: block; text-align: center; box-sizing: border-box; text-decoration: none; background: #ff0000 !important; color: #fff !important; border-radius: 4px; font-weight: 600; padding: 15px !important; border: none; cursor: pointer; transition: opacity 0.2s; }
 				.dd-enquire-btn:hover, .dd-enquire-btn:focus { opacity: 0.9; color: #fff !important; }
 			";
 			wp_add_inline_style('dd-woo-customizer-css', $custom_css);

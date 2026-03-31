@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, reordered upsells, and a composite unified FBT cart/enquiry system.
- * Version:     1.9.1
+ * Version:     1.9.2
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -200,6 +200,7 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Enqueue the plugin's custom stylesheet and inline assets.
+	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
 	 *
 	 * @since 1.9.1
 	 * @return void
@@ -211,7 +212,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.9.1',
+				'1.9.2',
 				'all'
 			);
 
@@ -875,9 +876,10 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Renders the unified Frequently Bought Together checkboxes directly inside the main cart form.
-	 * Now injects dynamic variation dropdowns for Parent Variable products, keeping the DOM structure flat.
+	 * Now injects dynamic variation dropdowns for Parent Variable products, explicitly disabling 
+	 * the custom variation card layouts for these nested FBT items to force native dropdowns.
 	 *
-	 * @since 1.9.1
+	 * @since 1.9.2
 	 * @return void
 	 */
 	public function display_frequently_bought_together_and_enquire_btn()
@@ -942,6 +944,9 @@ class DD_WooCommerce_Customizer
 
 					echo '<div class="dd-fbt-variable-options" data-product-id="' . esc_attr($cross_sell->get_id()) . '" data-variations="' . htmlspecialchars(wp_json_encode($available_variations), ENT_QUOTES, 'UTF-8') . '">';
 
+					// Temporarily remove variation cards filter to force native dropdowns inside FBT
+					remove_filter('woocommerce_dropdown_variation_attribute_options_html', [$this, 'render_custom_variation_cards'], 10);
+
 					foreach ($attributes as $attribute_name => $options) {
 						echo '<div class="dd-fbt-attribute-row">';
 						echo '<label>' . wc_attribute_label($attribute_name) . '</label>';
@@ -957,6 +962,9 @@ class DD_WooCommerce_Customizer
 						));
 						echo '</div>';
 					}
+
+					// Restore custom variation cards for the rest of the page
+					add_filter('woocommerce_dropdown_variation_attribute_options_html', [$this, 'render_custom_variation_cards'], 10, 2);
 
 					// This captures the derived variation ID once the JS parses the user selections above
 					echo '<input type="hidden" class="dd-fbt-variation-id" value="" />';

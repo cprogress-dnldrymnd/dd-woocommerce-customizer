@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, reordered upsells, and a composite unified FBT cart/enquiry system.
- * Version:     1.10.0
+ * Version:     1.9.6
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -48,6 +48,10 @@ class DD_WooCommerce_Customizer
 
 		// Intercept the core product CRUD object save to persist configurations.
 		add_action('woocommerce_before_product_object_save', [$this, 'save_card_layout_configuration']);
+
+		// General Product Meta: Add Enquire Only Checkbox
+		add_action('woocommerce_product_options_general_product_data', [$this, 'add_enquire_only_checkbox']);
+		add_action('woocommerce_process_product_meta', [$this, 'save_enquire_only_checkbox']);
 
 		// Backend: Add Custom Product Data Tabs (Logical Partitioning)
 		add_filter('woocommerce_product_data_tabs', [$this, 'add_custom_product_data_tabs']);
@@ -258,7 +262,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.10.0',
+				'1.9.6',
 				'all'
 			);
 
@@ -313,9 +317,9 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-attribute-row label { display: block; font-size: 0.8rem; font-weight: 600; color: #000; margin-bottom: 4px; white-space: nowrap}
 				.dd-fbt-variation-select.dd-fbt-variation-select { min-height: unset; width: 100%; max-width: 100%; font-size: 0.85rem; padding: 6px 8px; border-radius: 4px; border: 1px solid #cbd5e1; background: #f8fafc; }
 
-				/* Enquire Now Button overriding */
-				.dd-enquire-btn { width: 100%; margin-top: 15px; background: #ff0000 !important; color: #fff !important; border-radius: 4px; font-weight: 600; padding: 15px !important; border: none; cursor: pointer; transition: opacity 0.2s; }
-				.dd-enquire-btn:hover { opacity: 0.9; }
+				/* Enquire Now Button overriding to match GP schema as an <a> tag */
+				.dd-enquire-btn { display: block; text-align: center; box-sizing: border-box; text-decoration: none; width: 100%; margin-top: 15px; background: #ff0000 !important; color: #fff !important; border-radius: 4px; font-weight: 600; padding: 15px !important; border: none; cursor: pointer; transition: opacity 0.2s; }
+				.dd-enquire-btn:hover, .dd-enquire-btn:focus { opacity: 0.9; color: #fff !important; }
 			";
 			wp_add_inline_style('dd-woo-customizer-css', $custom_css);
 		}
@@ -1072,10 +1076,10 @@ class DD_WooCommerce_Customizer
 		
 		if ($is_enquire_only) {
 			$overlay_id   = get_option('dd_enquire_overlay_id');
-			$trigger_attr = !empty($overlay_id) ? ' data-gb-overlay-trigger="gb-overlay-' . absint($overlay_id) . '"' : '';
+			$trigger_attr = !empty($overlay_id) ? ' data-gb-overlay="gb-overlay-' . absint($overlay_id) . '" aria-controls="gb-overlay-' . absint($overlay_id) . '" aria-haspopup="dialog" aria-expanded="false"' : '';
 
-			// Output our custom trigger button with the native GenerateBlocks trigger attribute
-			echo '<button type="button" class="dd-enquire-btn button alt"' . $trigger_attr . '>' . esc_html__('ENQUIRE NOW', 'dd-woo-customizer') . '</button>';
+			// Output our custom trigger button utilizing the exact GenerateBlocks overlay schema
+			echo '<a href="#" class="dd-enquire-btn button alt"' . $trigger_attr . '>' . esc_html__('ENQUIRE NOW', 'dd-woo-customizer') . '</a>';
 			// Inject CSS to gracefully hide the standard WooCommerce add to cart button
 			echo '<style>.single_add_to_cart_button { display: none !important; }</style>';
 		}
@@ -1288,7 +1292,7 @@ class DD_WooCommerce_Customizer
 					});
 				});
 
-				// Enquire Now Action Handler (Global GenerateBlocks Overlay Mapping)
+				// Enquire Now Action Handler (Populates data, lets native GP overlay trigger run)
 				$(document).on('click', '.dd-enquire-btn', function(e) {
 					// 1. Capture Main Product Details
 					var mainTitle = $('h1.product_title').text().trim();
@@ -1339,13 +1343,13 @@ class DD_WooCommerce_Customizer
 						productsText += title + variationString + " - Qty: " + qty + "\n";
 					});
 
-					// 3. Locate the targeted input field specified in Global Settings and inject data
-					var $targetField = $(globalTargetFieldSelector);
-					if ($targetField.length > 0) {
-						$targetField.val(productsText.trim());
+					// 3. Locate the specific textarea in the GeneratePress off-canvas menu and map data
+					var $textarea = $(globalTargetFieldSelector);
+					if ($textarea.length > 0) {
+						$textarea.val(productsText.trim());
 					}
 					
-					// GenerateBlocks automatically handles opening the overlay via the data-gb-overlay-trigger attribute
+					// GenerateBlocks automatically handles opening the overlay via the data-gb-overlay attribute
 				});
 
 			});

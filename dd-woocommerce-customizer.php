@@ -263,8 +263,8 @@ class DD_WooCommerce_Customizer
 
 				/* Variable FBT Options Layout */
 				.dd-fbt-variable-options { width: 100%; margin-top: 12px; padding-top: 10px; border-top: 1px dashed #e2e8f0; }
-				.dd-fbt-attribute-row { margin-bottom: 8px; width: 100%; display: flex; align-items: center }
-				.dd-fbt-attribute-row label { display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 4px; }
+				.dd-fbt-attribute-row { margin-bottom: 8px; width: 100%; display: flex; align-items: center; gap: 0.5rem }
+				.dd-fbt-attribute-row label { display: block; font-size: 0.8rem; font-weight: 600; color: #000; margin-bottom: 4px; white-space: nowrap}
 				.dd-fbt-variation-select.dd-fbt-variation-select { min-height: unset; width: 100%; max-width: 100%; font-size: 0.85rem; padding: 6px 8px; border-radius: 4px; border: 1px solid #cbd5e1; background: #f8fafc; }
 
 				/* Enquire Now Button overriding */

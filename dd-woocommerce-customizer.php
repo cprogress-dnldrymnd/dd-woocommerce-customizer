@@ -247,7 +247,7 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-checkbox-wrapper input:checked ~ .dd-fbt-checkmark:after { content: ''; position: absolute; display: block; top: 4px; left: 4px; width: 8px; height: 8px; border-radius: 50%; background: #ff0000; }
 				
 				.dd-fbt-main { display: flex; align-items: flex-start; gap: 15px; flex-grow: 1; margin-left: 10px;}
-				.dd-fbt-main img { width: 40px; height: 40px; object-fit: contain; }
+				.dd-fbt-main img { width: 60px; height: 60px; object-fit: contain; }
 				.dd-fbt-details { display: flex; flex-direction: column; gap: 8px; width: 100%;}
 				.dd-fbt-title { font-size: 0.9rem; font-weight: 500; color: #000000; line-height: 1.2;}
 				

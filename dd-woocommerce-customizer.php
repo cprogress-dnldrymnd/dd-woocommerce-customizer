@@ -280,7 +280,7 @@ class DD_WooCommerce_Customizer
 				.reset_variations:hover { opacity: 0.7; }
 				
 				/* FBT Unified Modern Layout Customization */
-				.dd-fbt-wrapper { margin-bottom: 25px; }
+				.dd-fbt-wrapper { margin-bottom: 25px; width: 100%; }
 				.dd-fbt-wrapper h4 { margin: 0 0 15px 0; font-size: 14px; font-weight: 600; }
 				.dd-fbt-list { display: flex; flex-direction: column; gap: 10px; }
 				.dd-fbt-item { gap: 1rem; display: flex; align-items: center; justify-content: space-between; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; transition: all 0.2s ease; }
@@ -320,7 +320,7 @@ class DD_WooCommerce_Customizer
 				.dd-fbt-variation-select.dd-fbt-variation-select { min-height: unset; width: 100%; max-width: 100%; font-size: 0.85rem; padding: 6px 8px; border-radius: 4px; border: 1px solid #cbd5e1; background: #f8fafc; }
 
 				/* Grand Total Floating Display */
-				.dd-grand-total-wrap { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #f8fafc; border: 2px solid var(--accent); border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+				.dd-grand-total-wrap { width: 100%; flex: 0 0 100%; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #f8fafc; border: 2px solid var(--accent); border-radius: 8px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); box-sizing: border-box; }
 				.dd-grand-total-label { font-size: 1.1rem; font-weight: 600; color: var(--contrast); }
 				.dd-grand-total-value { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
 
@@ -1198,14 +1198,15 @@ class DD_WooCommerce_Customizer
 				// Helper function to safely extract raw number and currency string from HTML
 				function parsePriceElement($el) {
 					if (!$el || $el.length === 0) return 0;
-					var text = $el.text().trim();
+					
+					// When dealing with price ranges, securely extract the lowest boundary (first item) to ensure logical mathematical processing on page load
+					var $firstAmount = $el.find('.woocommerce-Price-amount').length > 0 ? $el.find('.woocommerce-Price-amount').first() : $el.first();
+					var text = $firstAmount.text().trim();
 					if (!text) return 0;
 					
-					// Attempt to extract the currency symbol
 					var match = text.match(/[^\d.,\s]+/);
 					if (match) currencySymbol = match[0];
 
-					// Clean number mapping
 					var numStr = text.replace(/,/g, '').replace(/[^\d.]/g, '');
 					var val = parseFloat(numStr);
 					return isNaN(val) ? 0 : val;
@@ -1215,20 +1216,19 @@ class DD_WooCommerce_Customizer
 				function calculateGrandTotal() {
 					var totalPrice = 0;
 
-					// 1. Main Product
+					// 1. Main Product Calculation
 					var mainQty = parseInt($('form.cart .quantity input.qty').val()) || 1;
-					// Target the active variation price if variable, otherwise fallback to simple price
-					var $mainPriceEl = $('.woocommerce-variation-price .woocommerce-Price-amount').last();
+					var $mainPriceEl = $('.woocommerce-variation-price .woocommerce-Price-amount').first();
 					if ($mainPriceEl.length === 0 || !$mainPriceEl.is(':visible')) {
-						$mainPriceEl = $('.summary > .price .woocommerce-Price-amount').last();
+						$mainPriceEl = $('.summary > .price .woocommerce-Price-amount').first();
 					}
 					totalPrice += (parsePriceElement($mainPriceEl) * mainQty);
 
-					// 2. FBT Items
+					// 2. Extrapolate FBT Calculations 
 					$('.dd-fbt-checkbox:checked').each(function() {
 						var $item = $(this).closest('.dd-fbt-item');
 						var qty = parseInt($item.find('.dd-fbt-qty-input').val()) || 1;
-						var $fbtPriceEl = $item.find('.dd-fbt-price .woocommerce-Price-amount').last();
+						var $fbtPriceEl = $item.find('.dd-fbt-price .woocommerce-Price-amount').first();
 						totalPrice += (parsePriceElement($fbtPriceEl) * qty);
 					});
 
@@ -1445,15 +1445,16 @@ class DD_WooCommerce_Customizer
 					});
 				});
 
-				// Enquire Now Action Handler (Populates data, formats string, and tracks prices)
+				// Enquire Now Action Handler (Populates data, formats string, and safely grabs DOM text via extraction methods)
 				$(document).on('click', '.dd-enquire-btn', function(e) {
 					var itemIndex = 1;
 					var productsText = "";
 					
-					// Function dependency check logic to safely extract strings directly from raw HTML
 					function getTextString($el) {
 						if (!$el || $el.length === 0) return "";
-						return $el.text().trim() || "";
+						// Utilize identical bounds logic to mirror visual presentation securely
+						var $firstAmount = $el.find('.woocommerce-Price-amount').length > 0 ? $el.find('.woocommerce-Price-amount').first() : $el.first();
+						return $firstAmount.text().trim() || "";
 					}
 
 					// 1. Capture Main Product Details
@@ -1461,7 +1462,6 @@ class DD_WooCommerce_Customizer
 					var mainQty   = parseInt($('form.cart .quantity input.qty').val()) || 1;
 					var mainVariationString = "";
 
-					// Process main product variation selections explicitly via human readable <option> tags
 					var $mainVarOptions = $('form.cart .variations select');
 					if ($mainVarOptions.length > 0) {
 						var mainOpts = [];
@@ -1477,10 +1477,9 @@ class DD_WooCommerce_Customizer
 						}
 					}
 
-					// Safely locate the active displayed price string for the main product
-					var $mainPriceEl = $('.woocommerce-variation-price .woocommerce-Price-amount').last();
+					var $mainPriceEl = $('.woocommerce-variation-price .woocommerce-Price-amount').first();
 					if ($mainPriceEl.length === 0 || !$mainPriceEl.is(':visible')) {
-						$mainPriceEl = $('.summary > .price .woocommerce-Price-amount').last();
+						$mainPriceEl = $('.summary > .price .woocommerce-Price-amount').first();
 					}
 					var mainPriceStr = getTextString($mainPriceEl) || (currencySymbol + "0.00");
 					
@@ -1495,7 +1494,6 @@ class DD_WooCommerce_Customizer
 						var qty   = parseInt($item.find('.dd-fbt-qty-input').val()) || 1;
 						var variationString = "";
 
-						// Append selected variation options to the enquiry text utilizing the readable label
 						var $varOptions = $item.find('.dd-fbt-variation-select');
 						if ($varOptions.length > 0) {
 							var opts = [];
@@ -1511,8 +1509,7 @@ class DD_WooCommerce_Customizer
 							}
 						}
 
-						// Safe price extraction for FBT row
-						var $fbtPriceEl = $item.find('.dd-fbt-price .woocommerce-Price-amount').last();
+						var $fbtPriceEl = $item.find('.dd-fbt-price .woocommerce-Price-amount').first();
 						var fbtPriceStr = getTextString($fbtPriceEl) || (currencySymbol + "0.00");
 
 						productsText += itemIndex + ". " + title + variationString + "\n";
@@ -1520,19 +1517,18 @@ class DD_WooCommerce_Customizer
 						itemIndex++;
 					});
 					
-					// Inject the previously calculated DOM total
 					var domTotal = $('.dd-grand-total-value').text();
 					if(domTotal) {
 						productsText += "Total: " + domTotal;
 					}
 
-					// 3. Locate the specific textarea in the GenerateBlocks overlay and map data
+					// 3. Target explicitly mapped GenerateBlocks elements natively
 					var $textarea = $(globalTargetFieldSelector);
 					if ($textarea.length > 0) {
 						$textarea.val(productsText.trim());
 					}
 					
-					// GenerateBlocks automatically handles opening the overlay via the data-gb-overlay attribute natively
+					// Core GenerateBlocks scripts will process the anchor element properties to initiate the modal logic securely.
 				});
 
 			});

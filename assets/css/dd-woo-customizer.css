@@ -267,6 +267,24 @@ ul.products .woocommerce-text-align-center {
 	pointer-events: none !important;
 }
 
+.wc-block-mini-cart__button.wc-block-mini-cart__button:hover {
+	background-color: transparent;
+}
+h2.wc-block-mini-cart__title {
+	font-size: 1.25rem;
+	font-weight: 700;
+}
+.wc-block-components-quantity-selector input.wc-block-components-quantity-selector__input {
+	min-height: unset;
+}
+
+.wc-block-components-quantity-selector {
+    background-color: #fff;
+    border: none;
+}
+.editor-styles-wrapper table.wc-block-cart-items .wc-block-cart-items__row .wc-block-cart-item__image img, table.wc-block-cart-items .wc-block-cart-items__row .wc-block-cart-item__image img {
+	border-radius: 10px;
+}
 @media (max-width: 1024px) {
 	.single-product {
 		background-color: #ebebeb;

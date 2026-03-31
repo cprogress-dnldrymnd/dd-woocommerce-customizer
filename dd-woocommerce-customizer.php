@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, reordered upsells, and a composite unified FBT cart/enquiry system.
- * Version:     1.9.4
+ * Version:     1.9.5
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -202,7 +202,7 @@ class DD_WooCommerce_Customizer
 	 * Enqueue the plugin's custom stylesheet and inline assets.
 	 * Conditionally loads the CSS asset solely on WooCommerce-related pages.
 	 *
-	 * @since 1.9.4
+	 * @since 1.9.5
 	 * @return void
 	 */
 	public function enqueue_custom_styles()
@@ -212,7 +212,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.9.4',
+				'1.9.5',
 				'all'
 			);
 
@@ -1006,9 +1006,9 @@ class DD_WooCommerce_Customizer
 
 	/**
 	 * Injects unified JavaScript logic for the composite Add to Cart parsing, including
-	 * the new dynamic variation attribute matcher ensuring Variable FBT products require valid selections.
+	 * native DOM event dispatching to forcefully update WooCommerce Gutenberg cart blocks.
 	 *
-	 * @since 1.9.4
+	 * @since 1.9.5
 	 * @return void
 	 */
 	public function inject_ajax_add_to_cart_scripts()
@@ -1183,11 +1183,15 @@ class DD_WooCommerce_Customizer
 						success: function(response) {
 							if (response && response.fragments) {
 
-								// Trigger native WooCommerce fragment refresh to update legacy headers/minicarts
+								// Trigger native WooCommerce fragment refresh to update legacy PHP widgets
 								$(document.body).trigger('added_to_cart', [response.fragments, response.cart_hash, $btn]);
 
-								// Explicitly dispatch the native WooCommerce event required to refresh the Gutenberg Mini Cart block
-								$(document.body).trigger('wc_blocks_refresh_cart');
+								// Explicitly dispatch the native DOM event required to refresh the Gutenberg Mini-Cart Block
+								var blockCartEvent = new CustomEvent('wc-blocks_added_to_cart', {
+									bubbles: true,
+									cancelable: true
+								});
+								document.body.dispatchEvent(blockCartEvent);
 
 								// Safely remove the loading states
 								$btn.removeClass('loading wc-loading');

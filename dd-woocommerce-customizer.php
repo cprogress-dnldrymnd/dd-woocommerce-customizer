@@ -4,7 +4,7 @@
  * Plugin Name: DD WooCommerce Customizer
  * Plugin URI:  https://digitallydisruptive.co.uk/
  * Description: A foundational plugin to handle bespoke WooCommerce customizations and enqueue specific stylesheet assets, optimized for GeneratePress. Includes custom product tabs, a bespoke file repeater, global review disabling, reordered upsells, and a composite unified FBT cart/enquiry system.
- * Version:     1.11.2
+ * Version:     1.11.3
  * Author:      Digitally Disruptive - Donald Raymundo
  * Author URI:  https://digitallydisruptive.co.uk/
  * Text Domain: dd-woo-customizer
@@ -79,6 +79,9 @@ class DD_WooCommerce_Customizer
 		// Layout: Position "You May Also Like" (Upsells) below Related Products
 		add_action('init', [$this, 'reorder_upsells_and_related_products']);
 
+		// Layout: Remove default WooCommerce breadcrumbs and headers on Shop and Product Category archives
+		add_action('wp', [$this, 'remove_woocommerce_archive_headers']);
+
 		// Layout: Display "Frequently bought together" and Enquire Now button INSIDE the main add-to-cart form
 		add_action('woocommerce_before_add_to_cart_button', [$this, 'display_frequently_bought_together_and_enquire_btn'], 10);
 
@@ -90,6 +93,7 @@ class DD_WooCommerce_Customizer
 		add_action('wp_ajax_nopriv_dd_ajax_add_to_cart', [$this, 'handle_ajax_add_to_cart']);
 	}
 
+	
 	/**
 	 * Registers the Global Settings menu under WooCommerce.
 	 *
@@ -257,7 +261,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.11.2',
+				'1.11.3',
 				'all'
 			);
 
@@ -1037,6 +1041,24 @@ class DD_WooCommerce_Customizer
 	{
 		remove_action('woocommerce_after_single_product_summary', 'woocommerce_upsell_display', 15);
 		add_action('woocommerce_after_single_product_summary', 'woocommerce_upsell_display', 25);
+	}
+
+	/**
+	 * Unhooks WooCommerce breadcrumbs, page titles, and archive descriptions
+	 * strictly from the Shop and Product Category routing contexts.
+	 * Hooked to 'wp' to ensure conditional tags are fully initialized.
+	 *
+	 * @since 1.11.3
+	 * @return void
+	 */
+	public function remove_woocommerce_archive_headers()
+	{
+		if (function_exists('is_woocommerce') && (is_shop() || is_product_category())) {
+			remove_action('woocommerce_before_main_content', 'woocommerce_breadcrumb', 20);
+			add_filter('woocommerce_show_page_title', '__return_false');
+			remove_action('woocommerce_archive_description', 'woocommerce_taxonomy_archive_description', 10);
+			remove_action('woocommerce_archive_description', 'woocommerce_product_archive_description', 10);
+		}
 	}
 
 	/**

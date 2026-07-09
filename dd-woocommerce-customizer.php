@@ -331,7 +331,7 @@ class DD_WooCommerce_Customizer
 				/* Enquire Now Button overriding to match GP schema as an <a> tag */
 				.dd-enquire-btn { order: 3; width: auto; flex-grow: 1; display: block; text-align: center; box-sizing: border-box; text-decoration: none; background: var(--accent) !important; color: #fff !important; border-radius: 4px; font-weight: 600; padding: 15px !important; border: none; cursor: pointer; transition: opacity 0.2s; }
 				.dd-enquire-btn:hover, .dd-enquire-btn:focus { opacity: 0.9; color: #fff !important; }
-				@media(min-width: 1025px){.site-content .dd-woo-custom-container{width: 70%} .site-content .content-area{width: 100%}}
+				@media(min-width: 1025px){body:not(.single-product) .site-content .dd-woo-custom-container{width: 70%} body:not(.single-product) .site-content .content-area{width: 100%}}
 				
 			";
 			wp_add_inline_style('dd-woo-customizer-css', $custom_css);

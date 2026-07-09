@@ -264,7 +264,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.12.0',
+				'1.12.1',
 				'all'
 			);
 

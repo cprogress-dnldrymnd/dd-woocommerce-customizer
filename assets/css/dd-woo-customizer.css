@@ -302,6 +302,17 @@ table.wc-block-cart-items .wc-block-cart-items__row .wc-block-components-product
    Product Categories block — collapsible accordion tree
    (enhanced via JS: .dd-cat-accordion / .dd-cat-row / .dd-cat-toggle / .dd-cat-sub)
    ========================================================================== */
+/* Prevent FOUC: keep the list hidden until JS enhances it into the accordion */
+.wc-block-product-categories .wc-block-product-categories-list--depth-0 {
+	visibility: hidden;
+	opacity: 0;
+}
+.dd-cat-accordion .wc-block-product-categories-list--depth-0 {
+	visibility: visible;
+	opacity: 1;
+	transition: opacity 0.2s ease;
+}
+
 .dd-cat-accordion .wc-block-product-categories-list {
 	list-style: none;
 	margin: 0;

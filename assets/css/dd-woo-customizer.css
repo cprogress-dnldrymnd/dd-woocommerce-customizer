@@ -298,6 +298,126 @@ table.wc-block-cart-items .wc-block-cart-items__row .wc-block-components-product
 .is-small table.wc-block-cart-items .wc-block-cart-items__row {
 	border-bottom: 1px solid var(--contrast-3);
 }
+/* ==========================================================================
+   Product Categories block — collapsible accordion tree
+   (enhanced via JS: .dd-cat-accordion / .dd-cat-row / .dd-cat-toggle / .dd-cat-sub)
+   ========================================================================== */
+.dd-cat-accordion .wc-block-product-categories-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.dd-cat-accordion .wc-block-product-categories-list-item {
+	margin: 0;
+	padding: 0;
+	border: none;
+}
+
+/* Divider between top-level parent categories */
+.dd-cat-accordion .wc-block-product-categories-list--depth-0 > .wc-block-product-categories-list-item + .wc-block-product-categories-list-item {
+	border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* The clickable row: name grows, count + chevron sit to the right */
+.dd-cat-accordion .dd-cat-row {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.6rem 0.5rem;
+	border-radius: 8px;
+	transition: background-color 0.15s ease;
+}
+.dd-cat-accordion .dd-cat-row:hover {
+	background-color: rgba(0, 0, 0, 0.04);
+}
+
+.dd-cat-accordion .dd-cat-row > a {
+	flex: 1 1 auto;
+	min-width: 0;
+	text-decoration: none;
+	color: var(--contrast);
+	font-size: 0.95rem;
+	font-weight: 500;
+	line-height: 1.3;
+	transition: color 0.15s ease;
+}
+.dd-cat-accordion .dd-cat-row > a:hover,
+.dd-cat-accordion .dd-cat-row > a.dd-cat-current {
+	color: var(--accent);
+}
+.dd-cat-accordion .dd-cat-row > a.dd-cat-current {
+	font-weight: 600;
+}
+
+/* Product count pill */
+.dd-cat-accordion .wc-block-product-categories-list-item-count {
+	flex: 0 0 auto;
+	margin: 0;
+	font-size: 0.7rem;
+	font-weight: 600;
+	line-height: 1;
+	color: var(--contrast);
+	opacity: 0.75;
+	background-color: rgba(0, 0, 0, 0.06);
+	border-radius: 999px;
+	padding: 0.2rem 0.5rem;
+}
+
+/* Expand / collapse chevron button */
+.dd-cat-accordion .dd-cat-toggle {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	margin: 0;
+	border: none;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--contrast);
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+.dd-cat-accordion .dd-cat-toggle:hover {
+	background-color: rgba(0, 0, 0, 0.08);
+}
+.dd-cat-accordion .dd-cat-toggle svg {
+	display: block;
+	transition: transform 0.25s ease;
+}
+.dd-cat-accordion .dd-has-children.is-open > .dd-cat-row > .dd-cat-toggle svg {
+	transform: rotate(90deg);
+}
+
+/* Rows without children keep the name aligned with those that have a chevron */
+.dd-cat-accordion .wc-block-product-categories-list-item:not(.dd-has-children) > .dd-cat-row {
+	padding-right: calc(0.5rem + 26px + 0.5rem);
+}
+
+/* Animated sub-list container */
+.dd-cat-accordion .dd-cat-sub {
+	list-style: none;
+	margin: 0;
+	padding-left: 0.75rem;
+	margin-left: 0.5rem;
+	border-left: 1px solid rgba(0, 0, 0, 0.1);
+	height: 0;
+	overflow: hidden;
+	transition: height 0.28s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.dd-cat-accordion .dd-cat-sub {
+		transition: none;
+	}
+	.dd-cat-accordion .dd-cat-toggle svg {
+		transition: none;
+	}
+}
+
 @media (max-width: 1024px) {
 	.single-product {
 		background-color: #ebebeb;

@@ -91,6 +91,9 @@ class DD_WooCommerce_Customizer
 		// AJAX Endpoints: Handle Custom Add to Cart for both Simple and Variable Products
 		add_action('wp_ajax_dd_ajax_add_to_cart', [$this, 'handle_ajax_add_to_cart']);
 		add_action('wp_ajax_nopriv_dd_ajax_add_to_cart', [$this, 'handle_ajax_add_to_cart']);
+
+		// JavaScript: Turn the WooCommerce Product Categories block into a collapsible accordion tree
+		add_action('wp_footer', [$this, 'inject_product_categories_accordion_scripts']);
 	}
 
 
@@ -261,7 +264,7 @@ class DD_WooCommerce_Customizer
 				'dd-woo-customizer-css',
 				plugin_dir_url(__FILE__) . 'assets/css/dd-woo-customizer.css',
 				[],
-				'1.11.3',
+				'1.12.0',
 				'all'
 			);
 
@@ -1597,6 +1600,187 @@ class DD_WooCommerce_Customizer
 				});
 
 			});
+		</script>
+<?php
+	}
+
+	/**
+	 * Progressively enhance the WooCommerce "Product Categories" block (list style) into a
+	 * collapsible accordion tree.
+	 *
+	 * The block outputs a nested <ul>/<li> structure with no interactivity. This script
+	 * restructures each list item into a flex "row" (name + product count + toggle button) and
+	 * hides every nested sub-list behind an animated accordion so that only the top-level parent
+	 * categories are visible on load. Sub-categories expand on demand, one branch at a time.
+	 *
+	 * @since 1.12.0
+	 */
+	public function inject_product_categories_accordion_scripts()
+	{
+		if (! function_exists('is_woocommerce') || ! is_woocommerce()) {
+			return;
+		}
+	?>
+		<script type="text/javascript">
+			(function() {
+				function ready(fn) {
+					if (document.readyState !== 'loading') {
+						fn();
+					} else {
+						document.addEventListener('DOMContentLoaded', fn);
+					}
+				}
+
+				var CHEVRON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6-6 6"/></svg>';
+
+				// Return the immediate child of `li` matching `selector`, ignoring deeper descendants.
+				function directChild(li, selector) {
+					for (var i = 0; i < li.children.length; i++) {
+						if (li.children[i].matches(selector)) {
+							return li.children[i];
+						}
+					}
+					return null;
+				}
+
+				function subOf(li) {
+					return directChild(li, '.dd-cat-sub');
+				}
+
+				function toggleOf(li) {
+					var row = directChild(li, '.dd-cat-row');
+					return row ? row.querySelector('.dd-cat-toggle') : null;
+				}
+
+				function openItem(li, animate) {
+					var sub = subOf(li);
+					if (!sub) {
+						return;
+					}
+					li.classList.add('is-open');
+					var btn = toggleOf(li);
+					if (btn) {
+						btn.setAttribute('aria-expanded', 'true');
+					}
+					if (!animate) {
+						sub.style.height = 'auto';
+						return;
+					}
+					var target = sub.scrollHeight;
+					sub.style.height = '0px';
+					sub.offsetHeight; // force reflow so the transition registers
+					sub.style.height = target + 'px';
+					sub.addEventListener('transitionend', function te(ev) {
+						if (ev.propertyName !== 'height') {
+							return;
+						}
+						if (li.classList.contains('is-open')) {
+							sub.style.height = 'auto';
+						}
+						sub.removeEventListener('transitionend', te);
+					});
+				}
+
+				function closeItem(li) {
+					var sub = subOf(li);
+					if (!sub) {
+						return;
+					}
+					sub.style.height = sub.scrollHeight + 'px';
+					sub.offsetHeight; // force reflow
+					li.classList.remove('is-open');
+					var btn = toggleOf(li);
+					if (btn) {
+						btn.setAttribute('aria-expanded', 'false');
+					}
+					sub.style.height = '0px';
+				}
+
+				ready(function() {
+					var blocks = document.querySelectorAll('.wc-block-product-categories');
+
+					blocks.forEach(function(block) {
+						block.classList.add('dd-cat-accordion');
+
+						block.querySelectorAll('.wc-block-product-categories-list-item').forEach(function(li) {
+							var link = directChild(li, 'a');
+							var count = directChild(li, '.wc-block-product-categories-list-item-count');
+							var sub = directChild(li, 'ul');
+
+							var row = document.createElement('div');
+							row.className = 'dd-cat-row';
+							if (link) {
+								row.appendChild(link);
+							}
+							if (count) {
+								row.appendChild(count);
+							}
+
+							if (sub) {
+								li.classList.add('dd-has-children');
+								sub.classList.add('dd-cat-sub');
+								sub.style.height = '0px';
+
+								var btn = document.createElement('button');
+								btn.type = 'button';
+								btn.className = 'dd-cat-toggle';
+								btn.setAttribute('aria-expanded', 'false');
+								btn.setAttribute('aria-label', 'Toggle subcategories');
+								btn.innerHTML = CHEVRON;
+								row.appendChild(btn);
+							}
+
+							li.insertBefore(row, li.firstChild);
+						});
+
+						// Delegate toggle clicks. Opening a branch closes its siblings (accordion behaviour).
+						block.addEventListener('click', function(e) {
+							var btn = e.target.closest('.dd-cat-toggle');
+							if (!btn || !block.contains(btn)) {
+								return;
+							}
+							e.preventDefault();
+							var li = btn.closest('.dd-has-children');
+							if (!li) {
+								return;
+							}
+
+							if (li.classList.contains('is-open')) {
+								closeItem(li);
+								return;
+							}
+
+							var siblingList = li.parentElement;
+							for (var i = 0; i < siblingList.children.length; i++) {
+								var sib = siblingList.children[i];
+								if (sib !== li && sib.classList && sib.classList.contains('is-open')) {
+									closeItem(sib);
+								}
+							}
+							openItem(li, true);
+						});
+
+						// Auto-expand the branch leading to the category currently being viewed.
+						var here = window.location.href.replace(/[?#].*$/, '').replace(/\/+$/, '');
+						var links = block.querySelectorAll('.dd-cat-row > a');
+						for (var j = 0; j < links.length; j++) {
+							var href = (links[j].href || '').replace(/[?#].*$/, '').replace(/\/+$/, '');
+							if (href && href === here) {
+								var node = links[j].closest('.wc-block-product-categories-list-item');
+								while (node) {
+									if (node.classList.contains('dd-has-children')) {
+										openItem(node, false);
+									}
+									var parentUl = node.parentElement;
+									node = parentUl ? parentUl.closest('.wc-block-product-categories-list-item') : null;
+								}
+								links[j].classList.add('dd-cat-current');
+								break;
+							}
+						}
+					});
+				});
+			})();
 		</script>
 <?php
 	}

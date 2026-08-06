@@ -1841,6 +1841,77 @@ class DD_WooCommerce_Customizer
 		</script>
 <?php
 	}
+
+	/**
+	 * Progressively enhance the short description and Description tab (each wrapped
+	 * server-side in a `.dd-readmore-content` container — see
+	 * wrap_short_description_for_read_more() / render_description_tab_content()) into a
+	 * 3-line clamp with a "Read more" / "Read less" toggle. The toggle button is only
+	 * added when the content actually overflows the clamped height.
+	 *
+	 * @since 1.13.0
+	 */
+	public function inject_read_more_scripts()
+	{
+		if (! is_product()) {
+			return;
+		}
+	?>
+		<script type="text/javascript">
+			(function() {
+				function ready(fn) {
+					if (document.readyState !== 'loading') {
+						fn();
+					} else {
+						document.addEventListener('DOMContentLoaded', fn);
+					}
+				}
+
+				function measure(el) {
+					if (el.dataset.ddReadmoreMeasured) {
+						return;
+					}
+					el.classList.add('dd-readmore-clamped');
+					if (el.scrollHeight - el.clientHeight <= 1) {
+						// Content fits within 3 lines already — no truncation needed.
+						el.classList.remove('dd-readmore-clamped');
+						return;
+					}
+					el.dataset.ddReadmoreMeasured = '1';
+
+					var btn = document.createElement('button');
+					btn.type = 'button';
+					btn.className = 'dd-readmore-toggle';
+					btn.textContent = 'Read more';
+					btn.setAttribute('aria-expanded', 'false');
+					btn.addEventListener('click', function() {
+						var expanded = !el.classList.contains('dd-readmore-clamped');
+						el.classList.toggle('dd-readmore-clamped', expanded);
+						btn.textContent = expanded ? 'Read more' : 'Read less';
+						btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+					});
+					el.insertAdjacentElement('afterend', btn);
+				}
+
+				function measureAll() {
+					document.querySelectorAll('.dd-readmore-content').forEach(measure);
+				}
+
+				ready(function() {
+					measureAll();
+
+					// The Description tab panel may be hidden behind another active tab on load
+					// (display:none reports a scrollHeight of 0), so re-measure once its tab is opened.
+					document.querySelectorAll('.woocommerce-tabs ul.tabs li a').forEach(function(link) {
+						link.addEventListener('click', function() {
+							setTimeout(measureAll, 50);
+						});
+					});
+				});
+			})();
+		</script>
+<?php
+	}
 }
 
 // Initialize the plugin instance only if WooCommerce is active to prevent fatal errors on deactivation.

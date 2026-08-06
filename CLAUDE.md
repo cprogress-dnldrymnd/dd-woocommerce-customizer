@@ -69,6 +69,13 @@ all wired in `__construct()`:
   `.dd-cat-accordion` section. The top-level list is hidden (`visibility`/`opacity`) in
   CSS until the JS adds the `dd-cat-accordion` class to the block, to avoid a flash of
   the un-enhanced nested list before JS runs.
+- **Read-more clamp**: the short description (`wrap_short_description_for_read_more` on
+  `woocommerce_short_description`) and the Description tab (`wrap_description_tab_for_read_more`
+  swaps its callback to `render_description_tab_content`, a re-implementation of
+  WooCommerce's default tab that wraps `the_content()`) both get wrapped in a
+  `.dd-readmore-content` container. `inject_read_more_scripts` (`wp_footer`) clamps that
+  container to 3 lines (`.dd-readmore-clamped`, CSS in `dd-woo-customizer.css`) and adds a
+  "Read more"/"Read less" toggle button when the content actually overflows.
 
 ## Conventions / gotchas
 

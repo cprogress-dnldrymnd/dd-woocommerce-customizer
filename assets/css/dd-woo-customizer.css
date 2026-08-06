@@ -478,10 +478,11 @@ table.wc-block-cart-items .wc-block-cart-items__row .wc-block-components-product
 	padding: 0;
 	font: inherit;
 	font-weight: 600;
-	color: var(--accent);
+	color: var(--accent) !important;
 	cursor: pointer;
 }
 
 .dd-readmore-toggle:hover {
 	text-decoration: underline;
+	background-color: transparent !important;
 }

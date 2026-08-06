@@ -1195,8 +1195,8 @@ class DD_WooCommerce_Customizer
 
 			// Output our custom trigger button utilizing the exact GenerateBlocks overlay schema
 			echo '<a href="#" class="dd-enquire-btn button alt"' . $trigger_attr . '>' . esc_html__('ENQUIRE NOW', 'dd-woo-customizer') . '</a>';
-			// Inject CSS to gracefully hide the standard WooCommerce add to cart button
-			echo '<style>.single_add_to_cart_button { display: none !important; }</style>';
+			// Inject CSS to gracefully hide the standard WooCommerce add to cart button and product price
+			echo '<style>.single_add_to_cart_button, .summary > .price, .woocommerce-variation-price, .dd-variation-card-price { display: none !important; }</style>';
 		}
 	}
 

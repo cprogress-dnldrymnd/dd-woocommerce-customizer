@@ -65,7 +65,9 @@ all wired in `__construct()`:
   progressively enhances the WooCommerce Product Categories block's plain nested
   `<ul>`/`<li>` markup into a collapsible accordion (one branch open at a time) via
   vanilla JS; corresponding styles are in the CSS file under the
-  `.dd-cat-accordion` section.
+  `.dd-cat-accordion` section. The top-level list is hidden (`visibility`/`opacity`) in
+  CSS until the JS adds the `dd-cat-accordion` class to the block, to avoid a flash of
+  the un-enhanced nested list before JS runs.
 
 ## Conventions / gotchas
 
@@ -75,9 +77,10 @@ all wired in `__construct()`:
   amount of CSS/JS is large enough to warrant a stylesheet section.
   `assets/css/dd-woo-customizer.css` is reserved mainly for page/layout-level rules and the
   category accordion.
-  - **Global overlay hard-coded**: `single_add_to_cart_button` is force-hidden with an
-  inline `<style>` when `_dd_enquire_only` is set — a targeted disable, not a form removal,
-  so quantity fields stay visible per plugin description.
+  - **Global overlay hard-coded**: when `_dd_enquire_only` is set, `single_add_to_cart_button`
+  and the displayed price (`.summary > .price`, `.woocommerce-variation-price`,
+  `.dd-variation-card-price`) are force-hidden with an inline `<style>` — a targeted disable,
+  not a form removal, so quantity fields stay visible per plugin description.
 - The custom AJAX add-to-cart handler strips the native `add-to-cart` field from the
   submitted `FormData` before posting — leaving it in causes WooCommerce's core
   `WC_Form_Handler` to double-add the product (see comment at the submit handler in

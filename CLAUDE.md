@@ -53,8 +53,9 @@ all wired in `__construct()`:
   the client-side logic: live grand-total calculation, a unified AJAX submit handler that
   adds the main product plus all checked FBT items in one request, and (when a product is
   flagged `_dd_enquire_only`) an "Enquire Now" button that populates a GenerateBlocks
-  overlay form field with a formatted summary of the selected items instead of adding to
-  cart. `handle_ajax_add_to_cart` is the server-side AJAX endpoint
+  overlay form field with a formatted summary of the selected items (title, variation,
+  quantity — no prices, since the price display is hidden for enquire-only products)
+  instead of adding to cart. `handle_ajax_add_to_cart` is the server-side AJAX endpoint
   (`wp_ajax_dd_ajax_add_to_cart`) that processes both the main product and FBT items in one
   cart operation.
 - **Global settings page**: WooCommerce → DD Customizer (`add_admin_menu`,
@@ -77,7 +78,7 @@ all wired in `__construct()`:
   amount of CSS/JS is large enough to warrant a stylesheet section.
   `assets/css/dd-woo-customizer.css` is reserved mainly for page/layout-level rules and the
   category accordion.
-  - **Global overlay hard-coded**: when `_dd_enquire_only` is set, `single_add_to_cart_button`
+- **Global overlay hard-coded**: when `_dd_enquire_only` is set, `single_add_to_cart_button`
   and the displayed price (`.summary > .price`, `.woocommerce-variation-price`,
   `.dd-variation-card-price`) are force-hidden with an inline `<style>` — a targeted disable,
   not a form removal, so quantity fields stay visible per plugin description.

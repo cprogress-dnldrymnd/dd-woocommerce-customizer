@@ -1195,8 +1195,8 @@ class DD_WooCommerce_Customizer
 
 			// Output our custom trigger button utilizing the exact GenerateBlocks overlay schema
 			echo '<a href="#" class="dd-enquire-btn button alt"' . $trigger_attr . '>' . esc_html__('ENQUIRE NOW', 'dd-woo-customizer') . '</a>';
-			// Inject CSS to gracefully hide the standard WooCommerce add to cart button and product price
-			echo '<style>.single_add_to_cart_button, .summary > .price, .woocommerce-variation-price, .dd-variation-card-price { display: none !important; }</style>';
+			// Inject CSS to gracefully hide the standard WooCommerce add to cart button, product price, and grand total
+			echo '<style>.single_add_to_cart_button, .summary > .price, .woocommerce-variation-price, .dd-variation-card-price, .dd-grand-total-wrap { display: none !important; }</style>';
 		}
 	}
 
@@ -1516,13 +1516,6 @@ class DD_WooCommerce_Customizer
 					var itemIndex = 1;
 					var productsText = "";
 
-					function getTextString($el) {
-						if (!$el || $el.length === 0) return "";
-						// Utilize identical bounds logic to mirror visual presentation securely
-						var $firstAmount = $el.find('.woocommerce-Price-amount').length > 0 ? $el.find('.woocommerce-Price-amount').first() : $el.first();
-						return $firstAmount.text().trim() || "";
-					}
-
 					// 1. Capture Main Product Details
 					var mainTitle = $('h1.product_title').text().trim();
 					var mainQty = parseInt($('form.cart .quantity input.qty').val()) || 1;
@@ -1544,14 +1537,8 @@ class DD_WooCommerce_Customizer
 						}
 					}
 
-					var $mainPriceEl = $('.woocommerce-variation-price .woocommerce-Price-amount').first();
-					if ($mainPriceEl.length === 0 || !$mainPriceEl.is(':visible')) {
-						$mainPriceEl = $('.summary > .price .woocommerce-Price-amount').first();
-					}
-					var mainPriceStr = getTextString($mainPriceEl) || (currencySymbol + "0.00");
-
 					productsText += itemIndex + ". " + mainTitle + mainVariationString + "\n";
-					productsText += mainQty + " x " + mainPriceStr + "\n\n";
+					productsText += "Qty: " + mainQty + "\n\n";
 					itemIndex++;
 
 					// 2. Capture Frequently Bought Together Details
@@ -1577,18 +1564,10 @@ class DD_WooCommerce_Customizer
 							}
 						}
 
-						var $fbtPriceEl = $item.find('.dd-fbt-price .woocommerce-Price-amount').first();
-						var fbtPriceStr = getTextString($fbtPriceEl) || (currencySymbol + "0.00");
-
 						productsText += itemIndex + ". " + title + variationString + "\n";
-						productsText += qty + " x " + fbtPriceStr + "\n\n";
+						productsText += "Qty: " + qty + "\n\n";
 						itemIndex++;
 					});
-
-					var domTotal = $('.dd-grand-total-value').text();
-					if (domTotal) {
-						productsText += "Total: " + domTotal;
-					}
 
 					// 3. Target explicitly mapped GenerateBlocks elements natively
 					var $textarea = $(globalTargetFieldSelector);

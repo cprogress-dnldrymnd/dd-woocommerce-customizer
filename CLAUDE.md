@@ -79,9 +79,14 @@ all wired in `__construct()`:
   `assets/css/dd-woo-customizer.css` is reserved mainly for page/layout-level rules and the
   category accordion.
 - **Global overlay hard-coded**: when `_dd_enquire_only` is set, `single_add_to_cart_button`
-  and the displayed price (`.summary > .price`, `.woocommerce-variation-price`,
-  `.dd-variation-card-price`) are force-hidden with an inline `<style>` — a targeted disable,
-  not a form removal, so quantity fields stay visible per plugin description.
+  and the FBT grand total (`.dd-grand-total-wrap`) are force-hidden with an inline `<style>`
+  — a targeted disable, not a form removal, so quantity fields stay visible per plugin
+  description. The price itself is not hidden but replaced everywhere WooCommerce renders
+  it (loop, single product summary, variation price, variation cards) with a "Tailored
+  pricing available" notice via `override_enquire_only_price_html()` on
+  `woocommerce_get_price_html`, which resolves variations to their parent product ID before
+  checking the flag. The Enquire text builder (`inject_ajax_add_to_cart_scripts`) also omits
+  price/total from the summary sent to the overlay's target field, listing quantity only.
 - The custom AJAX add-to-cart handler strips the native `add-to-cart` field from the
   submitted `FormData` before posting — leaving it in causes WooCommerce's core
   `WC_Form_Handler` to double-add the product (see comment at the submit handler in

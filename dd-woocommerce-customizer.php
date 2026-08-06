@@ -85,6 +85,9 @@ class DD_WooCommerce_Customizer
 		// Layout: Display "Frequently bought together" and Enquire Now button INSIDE the main add-to-cart form
 		add_action('woocommerce_before_add_to_cart_button', [$this, 'display_frequently_bought_together_and_enquire_btn'], 10);
 
+		// Frontend: Replace the price with "Tailored pricing available" for Enquire-only products, everywhere price HTML is rendered
+		add_filter('woocommerce_get_price_html', [$this, 'override_enquire_only_price_html'], 10, 2);
+
 		// JavaScript: Inject bespoke AJAX handler globally for all product forms
 		add_action('wp_footer', [$this, 'inject_ajax_add_to_cart_scripts']);
 
@@ -94,6 +97,15 @@ class DD_WooCommerce_Customizer
 
 		// JavaScript: Turn the WooCommerce Product Categories block into a collapsible accordion tree
 		add_action('wp_footer', [$this, 'inject_product_categories_accordion_scripts']);
+
+		// Frontend: Wrap the short description in a "Read more" clamp container
+		add_filter('woocommerce_short_description', [$this, 'wrap_short_description_for_read_more']);
+
+		// Frontend: Swap the default Description tab callback for one that wraps its content in a "Read more" clamp container
+		add_filter('woocommerce_product_tabs', [$this, 'wrap_description_tab_for_read_more'], 15);
+
+		// JavaScript: Clamp the short description and Description tab to 3 lines with a "Read more" toggle
+		add_action('wp_footer', [$this, 'inject_read_more_scripts']);
 	}
 
 
@@ -277,7 +289,10 @@ class DD_WooCommerce_Customizer
 				.dd-download-btn { display: inline-flex; align-items: center; background: var(--accent); color: var(--base-3); padding: 8px 12px; text-decoration: none; border-radius: 4px; font-weight: 500; font-size: 0.75rem; transition: background 0.2s; }
 				.dd-download-btn:hover { background: var(--contrast); color: var(--base-3); }
 				.dd-download-btn svg { width: 16px; height: 16px; margin-left: 8px; fill: currentColor; }
-				.upsells.products { margin-top: 4em; } 
+				.upsells.products { margin-top: 4em; }
+
+				/* Enquire-only products: replaces price HTML wherever WooCommerce renders it */
+				.dd-tailored-pricing { color: #e00000; font-weight: 700; }
 
 				/* Native WooCommerce Variation Price & Clear Overrides */
 				.woocommerce-variation.single_variation { padding: 15px 20px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px; display: flex; flex-direction: column; align-items: flex-start; }
@@ -1002,12 +1017,75 @@ class DD_WooCommerce_Customizer
 	}
 
 	/**
+	 * Wraps the short description content in a clamp container so it can be
+	 * truncated to 3 lines with a "Read more" toggle on the frontend.
+	 *
+	 * @since 1.13.0
+	 */
+	public function wrap_short_description_for_read_more($content)
+	{
+		if (empty($content) || ! is_product()) {
+			return $content;
+		}
+		return '<div class="dd-readmore-content dd-readmore-short-description">' . $content . '</div>';
+	}
+
+	/**
+	 * Swaps the default "Description" tab callback for one that wraps the
+	 * post content in a clamp container (see render_description_tab_content()).
+	 *
+	 * @since 1.13.0
+	 */
+	public function wrap_description_tab_for_read_more($tabs)
+	{
+		if (isset($tabs['description'])) {
+			$tabs['description']['callback'] = [$this, 'render_description_tab_content'];
+		}
+		return $tabs;
+	}
+
+	/**
+	 * Re-implementation of WooCommerce's default Description tab callback
+	 * (woocommerce_product_description_tab()) that wraps the post content in
+	 * a "Read more" clamp container. The heading stays outside the clamp.
+	 *
+	 * @since 1.13.0
+	 */
+	public function render_description_tab_content()
+	{
+		$heading = apply_filters('woocommerce_product_description_heading', __('Description', 'woocommerce'));
+		if ($heading) {
+			echo '<h2>' . esc_html($heading) . '</h2>';
+		}
+		echo '<div class="dd-readmore-content dd-readmore-description">';
+		the_content();
+		echo '</div>';
+	}
+
+	/**
 	 * Modifies the default WooCommerce breadcrumb arguments.
 	 */
 	public function modify_breadcrumb_delimiter($defaults)
 	{
 		$defaults['delimiter'] = ' <span class="sep">❯</span> ';
 		return $defaults;
+	}
+
+	/**
+	 * Replaces the rendered price HTML with a "Tailored pricing available" notice for
+	 * products flagged as Enquire-only. Applies everywhere WooCommerce builds price HTML
+	 * (shop/category loop, single product summary, variation price, variation cards),
+	 * since variations resolve the flag via their parent product.
+	 */
+	public function override_enquire_only_price_html($price_html, $product)
+	{
+		$product_id = $product->get_parent_id() ?: $product->get_id();
+
+		if (get_post_meta($product_id, '_dd_enquire_only', true) === 'yes') {
+			return '<span class="dd-tailored-pricing">' . esc_html__('Tailored pricing available', 'dd-woo-customizer') . '</span>';
+		}
+
+		return $price_html;
 	}
 
 	/**
@@ -1195,8 +1273,8 @@ class DD_WooCommerce_Customizer
 
 			// Output our custom trigger button utilizing the exact GenerateBlocks overlay schema
 			echo '<a href="#" class="dd-enquire-btn button alt"' . $trigger_attr . '>' . esc_html__('ENQUIRE NOW', 'dd-woo-customizer') . '</a>';
-			// Inject CSS to gracefully hide the standard WooCommerce add to cart button, product price, and grand total
-			echo '<style>.single_add_to_cart_button, .summary > .price, .woocommerce-variation-price, .dd-variation-card-price, .dd-grand-total-wrap { display: none !important; }</style>';
+			// Inject CSS to gracefully hide the standard WooCommerce add to cart button and grand total
+			echo '<style>.single_add_to_cart_button, .dd-grand-total-wrap { display: none !important; }</style>';
 		}
 	}
 

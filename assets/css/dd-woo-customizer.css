@@ -486,3 +486,8 @@ table.wc-block-cart-items .wc-block-cart-items__row .wc-block-components-product
 	text-decoration: underline;
 	background-color: transparent !important;
 }
+
+
+.dd-readmore-description *, .dd-readmore-short-description {
+	font-family: Poppins, sans-serif !important;
+}
